@@ -1,0 +1,20 @@
+
+python:S1192#"qDefine a constant instead of duplicating this literal "MSE_lower_boundary_condition_u_over_training.npy" 4 times.(äùœÏüÿÿÿÿ
+‡python:S1192 "jDefine a constant instead of duplicating this literal "MSE_symbolic_function_u_over_training.npy" 4 times.(’©ÁÂúÿÿÿÿ
+opython:S11927"WDefine a constant instead of duplicating this literal r"$\mathcal{L}_{num,u}$" 6 times.(™ÊÛ­
+mpython:S11921"UDefine a constant instead of duplicating this literal r"$\mathcal{L}_{PDE}$" 6 times.(ÆÊ·Ò
+qpython:S1192."TDefine a constant instead of duplicating this literal r"$\mathcal{L}_{IC}$" 4 times.(ÎèÔøÿÿÿÿ
+ƒpython:S1192"fDefine a constant instead of duplicating this literal "Relative_L2_Error_h_over_training.npy" 4 times.(òğ÷úÿÿÿÿ
+‡python:S1192"jDefine a constant instead of duplicating this literal "MSE_initial_condition_u_over_training.npy" 4 times.(Ùö³‘úÿÿÿÿ
+opython:S1192)"WDefine a constant instead of duplicating this literal r"$\mathcal{L}_{total}$" 4 times.(ƒÉõ÷
+tpython:S1192"\Define a constant instead of duplicating this literal "total_MSE_over_training.npy" 6 times.(ƒÿ¸±
+‡python:S1192"jDefine a constant instead of duplicating this literal "MSE_initial_condition_h_over_training.npy" 4 times.(¥Õ½üÿÿÿÿ
+spython:S11924"[Define a constant instead of duplicating this literal r"$\mathcal{L}_{num,\zeta}$" 6 times.(ì½öª
+~python:S1192"fDefine a constant instead of duplicating this literal "Relative_L2_Error_u_over_training.npy" 4 times.(È©Ğ…
+}python:S1192"`Define a constant instead of duplicating this literal "Hyper_Parameter_Dictionary.json" 4 times.(«ú™Şøÿÿÿÿ
+python:S1192%"qDefine a constant instead of duplicating this literal "MSE_upper_boundary_condition_u_over_training.npy" 4 times.(­Åàùüÿÿÿÿ
+python:S1192!"jDefine a constant instead of duplicating this literal "MSE_symbolic_function_h_over_training.npy" 4 times.(»êı
+†python:S1192"iDefine a constant instead of duplicating this literal "MSE_symbolic_functions_over_training.npy" 4 times.(÷¥§şÿÿÿÿ
+qpython:S1192,"TDefine a constant instead of duplicating this literal r"$\mathcal{L}_{BC}$" 3 times.(µÏ—öıÿÿÿÿ
+python:S1192"iDefine a constant instead of duplicating this literal "MSE_initial_conditions_over_training.npy" 4 times.(‘•ÎÀ
+‚python:S1192"jDefine a constant instead of duplicating this literal "MSE_boundary_conditions_over_training.npy" 4 times.(°ú›

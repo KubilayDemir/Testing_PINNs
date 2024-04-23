@@ -1,0 +1,16 @@
+# created by virtualenv automatically
+Generate_Manuscript_Figures/PDFs/*
+Generate_Manuscript_Figures/TIFF/*
+Generate_Manuscript_Figures/Train_On_PINNs_Loss/*
+Generate_Manuscript_Figures/Train_On_Validation_Loss/*
+venv/*
+1D_SWE_Numerical_Integrators/*
+1D_SWE_Numerical_Integrators/1D_SWE_AH=0/dt_Convergence_Tests
+1D_SWE_Numerical_Integrators/1D_SWE_AH=0/dx_Convergence_Test
+1D_SWE_Numerical_Integrators/1D_SWE_AH=5e+4/dt_Convergence_Tests
+1D_SWE_Numerical_Integrators/1D_SWE_AH=5e+4/dx_Convergence_Test
+1D_SWE_Final_Results/*
+1D_Shallow_Water_Equations_PINNs/Generate_Plots/Output_Data/*
+1D_Shallow_Water_Equations_PINNs/slurm_output/*
+1D_Shallow_Water_Equations_PINNs/Output_Data/*
+*.npy
