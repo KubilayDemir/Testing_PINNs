@@ -3,3 +3,4 @@
 *.tiff
 *.npy
 venv/*
+.idea/
