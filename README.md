@@ -1,1 +1,3 @@
+GitHub repository for the study: "Closed-boundary reflections of shallow water waves as an open challenge for physics-informed neural networks"
+
 This repository provides essential code and trained models for a study on applying Physics-Informed Neural Networks (PINNs) to the 1D Shallow Water Equations, focusing on closed boundary reflection test cases. This research is crucial for accurately modeling geophysical fluid dynamics in coastal areas, including storm surge, flood scenarios, and phenomena like Kelvin waves and amphidromic systems. The repository includes code for training PINNs, numerical integrators for reference solutions, and visualization tools. All data used in the figures and tables for this study is available on a Zenodo dataset.
