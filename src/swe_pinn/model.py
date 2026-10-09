@@ -32,102 +32,121 @@ def _layer_forward(value, layer, activation):
 
 def _mixed_activation(activation, value):
     middle = value.shape[1] // 2
-    return torch.cat((activation(value[:, :middle]), torch.relu(value[:, middle:])), dim=1)
+    return torch.cat(
+        (activation(value[:, :middle]), torch.relu(value[:, middle:])), dim=1
+    )
 
 
-def _network_forward(layers, value, activation, activate_output=False, checkpointing=False, mixed=False):
+def _network_forward(
+    layers,
+    value,
+    activation,
+    activate_output=False,
+    checkpointing=False,
+    mixed=False,
+):
     for index, layer in enumerate(layers):
-        function = activation if activate_output or index < len(layers) - 1 else None
+        function = (
+            activation if activate_output or index < len(layers) - 1 else None
+        )
         if mixed and 0 < index < len(layers) - 1:
             function = partial(_mixed_activation, activation)
         if checkpointing and torch.is_grad_enabled():
-            value = checkpoint(_layer_forward, value, layer, function, use_reentrant=False)
+            value = checkpoint(
+                _layer_forward, value, layer, function, use_reentrant=False
+            )
         else:
             value = _layer_forward(value, layer, function)
     return value
 
 
 class PINN(nn.Module):
-    """PINN for SWE, heat diffusion or viscous Burgers, with equation-specific physics."""
+    """PINN for SWE, heat diffusion or viscous Burgers.
+
+    Each equation supplies its own residuals and prescribed conditions.
+    """
+
     def __init__(
-            self,
-            layer_sizes: list = None,
-            activation_function=torch.tanh,
-            optimizer=torch.optim.Adam,
-            learning_rate=0.0005,
-            line_search="strong_wolfe",
-            weight_bc=1,
-            weight_ic=1,
-            weight_pde=1,
-            n_bc_points=5000,
-            n_ic_points=5000,
-            n_pde_points=50000,
-            training_steps=1500,
-            batch_resampling_period=1,
-            console_output_period=1,
-            device="cuda",
-            gravitational_acceleration=9.81,
-            average_sea_level=100.0,
-            momentum_dissipation=0,
-            nonlinear_drag_coefficient=0,
-            initial_perturbation_amplitude=1.0,
-            nondimensionalize=True,
-            vertical_length_scale=1.0,
-            vertical_scaling_factor=1.0,
-            horizontal_length_scale=1e6,
-            time_scale=5e4,
-            t_min=0.0,
-            t_max=1.0,
-            x_min=-1.0,
-            x_max=1.0,
-            use_pcgrad=True,
-            save_predictions=False,
-            save_residuals=True,
-            numerical_solution_time_interval=None,
-            numerical_solution_time_step=60.0,
-            numerical_solution_x_interval=None,
-            numerical_solution_space_step=1000.0,
-            fraction_of_time_interval=None,
-            segment_id=0,
-            n_time_segments=1,
-            new_initial_conditions=None,
-            new_initial_condition_sampling_points=None,
-            train_on_solution=False,
-            use_pde_loss=True,
-            boundary_condition_transition_function=False,
-            initial_condition_transition_function=False,
-            ic_transition="TF2",
-            split_networks=False,
-            use_bc_loss=True,
-            use_ic_loss=True,
-            momentum_advection=False,
-            mixed_activation_functions=False,
-            sirens_initialization=False,
-            adaptive_loss_weights=False,
-            minibatch_training=True,
-            pde_batch_size=1000,
-            bc_batch_size=100,
-            ic_batch_size=100,
-            iterations_per_epoch=50,
-            reference_path=None,
-            checkpoint_dir=None,
-            snapshot_period=100,
-            evaluation_batch_size=8192,
-            dataloader_workers=0,
-            pin_memory=False,
-            resume_period=0,
-            stream_history=False,
-            batch_diagnostics=False,
-            keep_improving_checkpoints=True,
-            checkpoint_period=0,
-            reference_on_cpu=False,
-            equation="swe",
-            hidden_layers=None,
-            activation="tanh",
-            diffusivity=None,
-            enforce_bc=False,
-            enforce_ic=False,
-            activation_checkpointing=False,
+        self,
+        layer_sizes: list = None,
+        activation_function=torch.tanh,
+        optimizer=torch.optim.Adam,
+        learning_rate=0.0005,
+        line_search="strong_wolfe",
+        weight_bc=1,
+        weight_ic=1,
+        weight_pde=1,
+        n_bc_points=5000,
+        n_ic_points=5000,
+        n_pde_points=50000,
+        training_steps=1500,
+        batch_resampling_period=1,
+        console_output_period=1,
+        device="cuda",
+        gravitational_acceleration=9.81,
+        average_sea_level=100.0,
+        momentum_dissipation=0,
+        nonlinear_drag_coefficient=0,
+        initial_perturbation_amplitude=1.0,
+        nondimensionalize=True,
+        vertical_length_scale=1.0,
+        vertical_scaling_factor=1.0,
+        horizontal_length_scale=1e6,
+        time_scale=5e4,
+        t_min=0.0,
+        t_max=1.0,
+        x_min=-1.0,
+        x_max=1.0,
+        use_pcgrad=True,
+        save_predictions=False,
+        save_residuals=True,
+        numerical_solution_time_interval=None,
+        numerical_solution_time_step=60.0,
+        numerical_solution_x_interval=None,
+        numerical_solution_space_step=1000.0,
+        fraction_of_time_interval=None,
+        segment_id=0,
+        n_time_segments=1,
+        new_initial_conditions=None,
+        new_initial_condition_sampling_points=None,
+        train_on_solution=False,
+        use_pde_loss=True,
+        boundary_condition_transition_function=False,
+        initial_condition_transition_function=False,
+        ic_transition="TF2",
+        split_networks=False,
+        use_bc_loss=True,
+        use_ic_loss=True,
+        momentum_advection=False,
+        mixed_activation_functions=False,
+        sirens_initialization=False,
+        adaptive_loss_weights=False,
+        minibatch_training=True,
+        pde_batch_size=1000,
+        bc_batch_size=100,
+        ic_batch_size=100,
+        iterations_per_epoch=50,
+        reference_path=None,
+        checkpoint_dir=None,
+        snapshot_period=100,
+        evaluation_batch_size=8192,
+        dataloader_workers=0,
+        pin_memory=False,
+        resume_period=0,
+        stream_history=False,
+        batch_diagnostics=False,
+        keep_improving_checkpoints=True,
+        checkpoint_period=0,
+        reference_on_cpu=False,
+        equation="swe",
+        hidden_layers=None,
+        activation="tanh",
+        diffusivity=None,
+        enforce_bc=False,
+        enforce_ic=False,
+        activation_checkpointing=False,
+        training_methods=None,
+        sampling_seed=0,
     ):
 
         super().__init__()
@@ -135,14 +154,32 @@ class PINN(nn.Module):
             raise ValueError("equation must be swe, heat or burgers")
         self.equation = equation
         self.activation_checkpointing = activation_checkpointing
+        from .training_methods import TrainingStrategy
+
+        bounds = [[t_min, t_max], [x_min, x_max]]
+        self.training_strategy = TrainingStrategy(
+            training_methods, bounds, sampling_seed, evaluation_batch_size
+        )
         if equation != "swe":
-            self.pi = 4 * torch.atan(torch.ones(1)).item() if equation == "burgers" else np.pi
-            self.diffusivity = diffusivity if diffusivity is not None else (0.25 if equation == "heat" else 0.01 / self.pi)
+            self.pi = (
+                4 * torch.atan(torch.ones(1)).item()
+                if equation == "burgers"
+                else np.pi
+            )
+            self.diffusivity = (
+                diffusivity
+                if diffusivity is not None
+                else (0.25 if equation == "heat" else 0.01 / self.pi)
+            )
             self.enforce_bc, self.enforce_ic = enforce_bc, enforce_ic
             if not hidden_layers:
-                raise ValueError("hidden_layers are required for heat and Burgers")
+                raise ValueError(
+                    "hidden_layers are required for heat and Burgers"
+                )
             sizes = [2, *hidden_layers, 1]
-            self.layers = nn.ModuleList([nn.Linear(a, b) for a, b in zip(sizes[:-1], sizes[1:])])
+            self.layers = nn.ModuleList(
+                [nn.Linear(a, b) for a, b in zip(sizes[:-1], sizes[1:])]
+            )
             self.activation_function = getattr(torch, activation)
             return
 
@@ -214,7 +251,11 @@ class PINN(nn.Module):
         if self.sirens_initialization is True:
             c = np.sqrt(6)
             omega_0 = 30
-            groups = (self.layers_u, self.layers_h) if self.split_networks else (self.layers,)
+            groups = (
+                (self.layers_u, self.layers_h)
+                if self.split_networks
+                else (self.layers,)
+            )
             for layers in groups:
                 for i in range(self.number_of_layers):
                     input_size = layers[i].weight.shape[0]
@@ -399,10 +440,10 @@ class PINN(nn.Module):
         if self.nondimensionalize is True:
             self.solution_time_grid = self.solution_time_grid / self.time_scale
             self.zeta_solution_x_grid = (
-                    self.zeta_solution_x_grid / self.horizontal_length_scale
+                self.zeta_solution_x_grid / self.horizontal_length_scale
             )
             self.u_solution_x_grid = (
-                    self.u_solution_x_grid / self.horizontal_length_scale
+                self.u_solution_x_grid / self.horizontal_length_scale
             )
 
         [self.zeta_solution_time_mesh_grid, self.zeta_solution_x_mesh_grid] = (
@@ -469,26 +510,49 @@ class PINN(nn.Module):
 
     def forward(self, t, x):
         if self.equation != "swe":
-            output = _network_forward(self.layers, torch.cat((t, x), dim=1), self.activation_function,
-                                      activate_output=True, checkpointing=self.activation_checkpointing)
+            output = _network_forward(
+                self.layers,
+                torch.cat((t, x), dim=1),
+                self.activation_function,
+                activate_output=True,
+                checkpointing=self.activation_checkpointing,
+            )
             if self.enforce_bc:
-                output = (1 - torch.exp((x - 1) / 0.1)) * (1 - torch.exp((-x - 1) / 0.1)) * output
+                output = (
+                    (1 - torch.exp((x - 1) / 0.1))
+                    * (1 - torch.exp((-x - 1) / 0.1))
+                    * output
+                )
             if self.enforce_ic:
                 decay = torch.exp(-t / 0.1)
-                output = self.initial_condition(x) * decay + output * (1 - decay)
+                output = self.initial_condition(x) * decay + output * (
+                    1 - decay
+                )
             return output
 
         tx = torch.cat((t, x), dim=1)
 
         if self.split_networks is True:
-            output_u = _network_forward(self.layers_u, tx, self.activation_function,
-                                        checkpointing=self.activation_checkpointing)
-            output_zeta = _network_forward(self.layers_h, tx, self.activation_function,
-                                           checkpointing=self.activation_checkpointing)
+            output_u = _network_forward(
+                self.layers_u,
+                tx,
+                self.activation_function,
+                checkpointing=self.activation_checkpointing,
+            )
+            output_zeta = _network_forward(
+                self.layers_h,
+                tx,
+                self.activation_function,
+                checkpointing=self.activation_checkpointing,
+            )
         else:
-            output = _network_forward(self.layers, tx, self.activation_function,
-                                      checkpointing=self.activation_checkpointing,
-                                      mixed=self.mixed_activation_functions)
+            output = _network_forward(
+                self.layers,
+                tx,
+                self.activation_function,
+                checkpointing=self.activation_checkpointing,
+                mixed=self.mixed_activation_functions,
+            )
 
             output_u = output[:, 0:1]
             output_zeta = output[:, 1:2]
@@ -496,20 +560,22 @@ class PINN(nn.Module):
         if self.boundary_condition_transition_function is True:
             tau_x = 0.1 * self.x_max
             output_u = (
-                    (1.0 - torch.exp((x - self.x_max) / tau_x))
-                    * (1.0 - torch.exp((-x - self.x_max) / tau_x))
-                    * output_u
+                (1.0 - torch.exp((x - self.x_max) / tau_x))
+                * (1.0 - torch.exp((-x - self.x_max) / tau_x))
+                * output_u
             )
 
         if self.initial_condition_transition_function is True:
             tau_t = 0.1 * self.t_max
             output_u = output_u * (1.0 - torch.exp(-t / tau_t))
             if self.ic_transition == "TF2":
-                output_zeta = self.initial_zeta(x) * torch.exp(-t / tau_t) + output_zeta * (
-                        1.0 - torch.exp(-t / tau_t)
-                )
+                output_zeta = self.initial_zeta(x) * torch.exp(
+                    -t / tau_t
+                ) + output_zeta * (1.0 - torch.exp(-t / tau_t))
             else:
-                output_zeta = self.initial_zeta(x) + output_zeta * (1.0 - torch.exp(-t / tau_t))
+                output_zeta = self.initial_zeta(x) + output_zeta * (
+                    1.0 - torch.exp(-t / tau_t)
+                )
 
         output = torch.cat((output_u, output_zeta), dim=1)
 
@@ -522,22 +588,32 @@ class PINN(nn.Module):
 
     def pde_residual(self, points):
         from .physics import benchmark_residual, swe_residuals
+
         if self.equation == "swe":
             return swe_residuals(self, points[:, :1], points[:, 1:2])
         return benchmark_residual(self, points)
 
-    def losses(self, batches):
+    def losses(self, batches, weighted=True):
         """PDE and condition losses for the heat and Burgers benchmark workflow."""
         if self.equation == "swe":
-            raise ValueError("SWE condition targets and segmented losses use closure()")
+            raise ValueError(
+                "SWE condition targets and segmented losses use closure()"
+            )
         pde, left, right, initial = batches
         residual = self.pde_residual(pde)
         eleft = self(left[:, :1], left[:, 1:2])
         eright = self(right[:, :1], right[:, 1:2])
-        einitial = self(initial[:, :1], initial[:, 1:2]) - self.initial_condition(initial[:, 1:2])
-        return {"loss_pde": (residual ** 2 / len(residual)).sum(),
-                "loss_bc": (eleft ** 2 / len(eleft) + eright ** 2 / len(eright)).sum(),
-                "loss_ic": (einitial ** 2 / len(einitial)).sum()}
+        einitial = self(
+            initial[:, :1], initial[:, 1:2]
+        ) - self.initial_condition(initial[:, 1:2])
+        pde_loss = (residual**2 / len(residual)).sum()
+        if weighted and self.training_strategy.active:
+            pde_loss = self.training_strategy.pde_loss(pde, residual.square())
+        return {
+            "loss_pde": pde_loss,
+            "loss_bc": (eleft**2 / len(eleft) + eright**2 / len(eright)).sum(),
+            "loss_ic": (einitial**2 / len(einitial)).sum(),
+        }
 
     def compute_pde_residuals(self):
         from .physics import swe_residuals
@@ -549,42 +625,45 @@ class PINN(nn.Module):
     def compute_bc_loss(self):
 
         self.loss_bc_left = (
-                (
-                        self.left_boundary_prediction[:, 0:1]
-                        - self.left_boundary_target
-                )
-                ** 2
+            (self.left_boundary_prediction[:, 0:1] - self.left_boundary_target)
+            ** 2
         ).mean()
         self.loss_bc_right = (
-                (
-                        self.right_boundary_prediction[:, 0:1]
-                        - self.right_boundary_target
-                )
-                ** 2
+            (
+                self.right_boundary_prediction[:, 0:1]
+                - self.right_boundary_target
+            )
+            ** 2
         ).mean()
         self.loss_bc = self.loss_bc_left + self.loss_bc_right
 
     def compute_ic_loss(self):
         self.loss_ic_u = (
-                (
-                        self.network_output_initial_conditions[:, 0:1]
-                        - self.initial_velocity_target
-                )
-                ** 2
+            (
+                self.network_output_initial_conditions[:, 0:1]
+                - self.initial_velocity_target
+            )
+            ** 2
         ).mean()
         self.loss_ic_zeta = (
-                (
-                        self.network_output_initial_conditions[:, 1:2]
-                        - self.initial_elevation_target
-                )
-                ** 2
+            (
+                self.network_output_initial_conditions[:, 1:2]
+                - self.initial_elevation_target
+            )
+            ** 2
         ).mean()
         self.loss_ic = self.loss_ic_u + self.loss_ic_zeta
 
     def compute_pde_loss(self):
-        self.loss_momentum = (self.momentum_residual ** 2).mean()
-        self.loss_continuity = (self.continuity_residual ** 2).mean()
+        self.loss_momentum = (self.momentum_residual**2).mean()
+        self.loss_continuity = (self.continuity_residual**2).mean()
         self.loss_pde = self.loss_momentum + self.loss_continuity
+        if self.training_strategy.active:
+            self.loss_pde = self.training_strategy.pde_loss(
+                self.pde_points,
+                self.momentum_residual.square()
+                + self.continuity_residual.square(),
+            )
 
     def compute_total_loss(self):
         self.loss_total = 0.0
@@ -592,7 +671,11 @@ class PINN(nn.Module):
         if self.adaptive_loss_weights is True:
             alpha = 0.9  # weight between new and old weight for update
 
-            layers = list(self.layers_u) + list(self.layers_h) if self.split_networks else self.layers
+            layers = (
+                list(self.layers_u) + list(self.layers_h)
+                if self.split_networks
+                else self.layers
+            )
             number_of_layers = len(layers)
 
             self.optimizer.zero_grad()
@@ -634,20 +717,18 @@ class PINN(nn.Module):
 
             eps = torch.finfo(gradient_tensor.dtype).eps
             new_initial_condition_weight = (
-                    max_pde_grad
-                    / mean_initial_condition_grad.clamp_min(eps)
+                max_pde_grad / mean_initial_condition_grad.clamp_min(eps)
             ).detach()
             self.weight_ic = (
-                                     1 - alpha
-                             ) * self.weight_ic + alpha * new_initial_condition_weight
+                1 - alpha
+            ) * self.weight_ic + alpha * new_initial_condition_weight
 
             new_boundary_condition_weight = (
-                    max_pde_grad
-                    / mean_boundary_condition_grad.clamp_min(eps)
+                max_pde_grad / mean_boundary_condition_grad.clamp_min(eps)
             ).detach()
             self.weight_bc = (
-                                     1 - alpha
-                             ) * self.weight_bc + alpha * new_boundary_condition_weight
+                1 - alpha
+            ) * self.weight_bc + alpha * new_boundary_condition_weight
 
         # MSE containing the error at the initial and boundary conditions and the PDE
         # loss term
@@ -655,14 +736,14 @@ class PINN(nn.Module):
             self.loss_total += self.weight_pde * self.loss_pde
 
         if (
-                self.initial_condition_transition_function is False
-                and self.use_ic_loss is True
+            self.initial_condition_transition_function is False
+            and self.use_ic_loss is True
         ):
             self.loss_total += self.weight_ic * self.loss_ic
 
         if (
-                self.boundary_condition_transition_function is False
-                and self.use_bc_loss is True
+            self.boundary_condition_transition_function is False
+            and self.use_bc_loss is True
         ):
             self.loss_total += self.weight_bc * self.loss_bc
 
@@ -678,9 +759,9 @@ class PINN(nn.Module):
             return torch.cat(
                 [
                     self.forward(
-                        t[start: start + size].to(self.device),
-                        x[start: start + size].to(self.device)
-                    )[:, column: column + 1].to(self.reference_device)
+                        t[start : start + size].to(self.device),
+                        x[start : start + size].to(self.device),
+                    )[:, column : column + 1].to(self.reference_device)
                     for start in range(0, len(t), size)
                 ]
             )
@@ -696,31 +777,31 @@ class PINN(nn.Module):
 
         if self.nondimensionalize is True:
             self.network_output_u = (
-                    self.network_output_u
-                    * self.horizontal_length_scale
-                    / self.time_scale
+                self.network_output_u
+                * self.horizontal_length_scale
+                / self.time_scale
             )
             self.network_output_zeta = (
-                    self.network_output_zeta * self.vertical_length_scale
+                self.network_output_zeta * self.vertical_length_scale
             )
 
         self.mse_ref_zeta = (
-                (
-                        self.zeta_ref
-                        - self.network_output_zeta.reshape(
+            (
+                self.zeta_ref
+                - self.network_output_zeta.reshape(
                     self.zeta_solution_mesh_grid_shape
                 )
-                )
-                ** 2
+            )
+            ** 2
         ).mean()
         self.mse_ref_u = (
-                (
-                        self.u_ref
-                        - self.network_output_u.reshape(
+            (
+                self.u_ref
+                - self.network_output_u.reshape(
                     self.u_solution_mesh_grid_shape
                 )
-                )
-                ** 2
+            )
+            ** 2
         ).mean()
 
     # reset datasets and re-sample collocation points
@@ -798,12 +879,8 @@ class PINN(nn.Module):
             )
 
         else:
-            self.initial_velocity_target = self.new_initial_conditions[
-                :, 0:1
-            ]
-            self.initial_elevation_target = self.new_initial_conditions[
-                :, 1:2
-            ]
+            self.initial_velocity_target = self.new_initial_conditions[:, 0:1]
+            self.initial_elevation_target = self.new_initial_conditions[:, 1:2]
 
         self.new_sampling_points = False
 
@@ -820,11 +897,9 @@ class PINN(nn.Module):
 
         # compute gradients
         if backward and (
-                self.use_pcgrad is False or self.train_on_solution is True
+            self.use_pcgrad is False or self.train_on_solution is True
         ):
-            self.loss_total.backward(
-                retain_graph=False
-            )
+            self.loss_total.backward(retain_graph=False)
 
         return self.loss_total
 
@@ -833,12 +908,20 @@ class PINN(nn.Module):
         self.loss_ic_history.append(self.loss_ic.cpu().detach().numpy())
         self.loss_pde_history.append(self.loss_pde.cpu().detach().numpy())
         self.loss_total_history.append(self.loss_total.cpu().detach().numpy())
-        self.mse_ref_zeta_history.append(self.mse_ref_zeta.cpu().detach().numpy())
+        self.mse_ref_zeta_history.append(
+            self.mse_ref_zeta.cpu().detach().numpy()
+        )
         self.mse_ref_u_history.append(self.mse_ref_u.cpu().detach().numpy())
         self.loss_ic_u_history.append(self.loss_ic_u.cpu().detach().numpy())
-        self.loss_ic_zeta_history.append(self.loss_ic_zeta.cpu().detach().numpy())
-        self.loss_momentum_history.append(self.loss_momentum.cpu().detach().numpy())
-        self.loss_continuity_history.append(self.loss_continuity.cpu().detach().numpy())
+        self.loss_ic_zeta_history.append(
+            self.loss_ic_zeta.cpu().detach().numpy()
+        )
+        self.loss_momentum_history.append(
+            self.loss_momentum.cpu().detach().numpy()
+        )
+        self.loss_continuity_history.append(
+            self.loss_continuity.cpu().detach().numpy()
+        )
         self.loss_bc_left_history.append(
             self.loss_bc_left.cpu().detach().numpy()
         )
@@ -849,6 +932,7 @@ class PINN(nn.Module):
     def save_prediction_snapshot(self):
         if self.batch_diagnostics:
             from .diagnostics import prediction_snapshot
+
             prediction_snapshot(self)
             return
         self.network_output = self.forward(
@@ -872,6 +956,7 @@ class PINN(nn.Module):
     def save_residual_snapshot(self):
         if self.batch_diagnostics:
             from .diagnostics import residual_snapshot
+
             residual_snapshot(self)
             return
         sampling_points = self.pde_points
@@ -883,7 +968,9 @@ class PINN(nn.Module):
         )
         self.compute_pde_residuals()
         momentum = self.momentum_residual.reshape(shape=self.mesh_grid_shape)
-        continuity = self.continuity_residual.reshape(shape=self.mesh_grid_shape)
+        continuity = self.continuity_residual.reshape(
+            shape=self.mesh_grid_shape
+        )
         self.momentum_residual_history.append(
             momentum.cpu().detach().numpy().reshape(self.mesh_grid_shape)
         )
@@ -894,12 +981,8 @@ class PINN(nn.Module):
 
     def save_weight_history(self):
         self.pde_weight_history.append(self.weight_pde)
-        self.ic_weight_history.append(
-            float(self.weight_ic)
-        )
-        self.bc_weight_history.append(
-            float(self.weight_bc)
-        )
+        self.ic_weight_history.append(float(self.weight_ic))
+        self.bc_weight_history.append(float(self.weight_bc))
 
     def final_state(self):
         self.final_state_sampling_points = self.final_state_dataset.tx.to(
@@ -919,12 +1002,8 @@ class PINN(nn.Module):
 
     def _use_full_pool(self):
         self.pde_points = self.pde_dataset.tx.to(self.device)
-        self.left_boundary_points = self.lbc_dataset.tx.to(
-            self.device
-        )
-        self.right_boundary_points = self.ubc_dataset.tx.to(
-            self.device
-        )
+        self.left_boundary_points = self.lbc_dataset.tx.to(self.device)
+        self.right_boundary_points = self.ubc_dataset.tx.to(self.device)
         self.initial_condition_sampling_points = self.ic_dataset.tx.to(
             self.device
         )
@@ -938,8 +1017,8 @@ class PINN(nn.Module):
             state = self.state_dict()
             if self.keep_improving_checkpoints:
                 save_torch(
-                    state, self.checkpoint_dir
-                           / f"best_epoch_{epoch:06d}.pt",
+                    state,
+                    self.checkpoint_dir / f"best_epoch_{epoch:06d}.pt",
                 )
             save_torch(state, self.checkpoint_dir / "best.pt")
         self.improvement_steps.append(epoch)
@@ -949,6 +1028,7 @@ class PINN(nn.Module):
     def fit(self, resume=None):
         """Train using the explicit loop in training_loop.py."""
         from .training_loop import fit
+
         return fit(self, resume)
 
     def _record_snapshot(self, epoch):
@@ -972,6 +1052,7 @@ class PINN(nn.Module):
         try:
             if self.batch_diagnostics:
                 from .diagnostics import report_losses
+
                 report_losses(self)
             else:
                 self.closure(backward=False)
@@ -980,7 +1061,7 @@ class PINN(nn.Module):
         with torch.no_grad():
             self.compute_reference_error()
         if not torch.isfinite(self.loss_total) or not torch.isfinite(
-                self.mse_ref_u + self.mse_ref_zeta
+            self.mse_ref_u + self.mse_ref_zeta
         ):
             raise FloatingPointError(
                 f"Non-finite loss or reference error at epoch {epoch}"

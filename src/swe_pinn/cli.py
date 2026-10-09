@@ -19,40 +19,76 @@ def main(argv=None):
     )
     commands = parser.add_subparsers(dest="command", required=True)
     training = commands.add_parser("train")
-    training.add_argument("--equation", choices=("swe", "heat", "burgers"), default="swe")
-    training.add_argument("--config", type=Path, help="default: selected equation's training_cases configuration")
+    training.add_argument(
+        "--equation", choices=("swe", "heat", "burgers"), default="swe"
+    )
+    training.add_argument(
+        "--config",
+        type=Path,
+        help="default: selected equation's training_cases configuration",
+    )
     training.add_argument("--run-id")
-    training.add_argument("--seed", type=int, help="override seed for independent repetitions")
-    training.add_argument("--device", help="override device, e.g. cpu or cuda:0")
+    training.add_argument(
+        "--seed", type=int, help="override seed for independent repetitions"
+    )
+    training.add_argument(
+        "--device", help="override device, e.g. cpu or cuda:0"
+    )
     training.add_argument("--cpu-threads", type=int)
-    training.add_argument("--initial-checkpoint", type=Path, help="heat/Burgers warm start with a fresh optimizer")
-    training.add_argument("--options", nargs="+", type=Path, help="optional YAML overrides, applied in order")
-    resume = commands.add_parser("resume", help="recover a locally generated run at an epoch boundary")
+    training.add_argument(
+        "--initial-checkpoint",
+        type=Path,
+        help="heat/Burgers warm start with a fresh optimizer",
+    )
+    training.add_argument(
+        "--options",
+        nargs="+",
+        type=Path,
+        help="optional YAML overrides, applied in order",
+    )
+    resume = commands.add_parser(
+        "resume", help="recover a locally generated run at an epoch boundary"
+    )
     resume.add_argument("--run-dir", type=Path, required=True)
-    monitor = commands.add_parser("monitor", help="live loss plots in a browser; reads saved histories")
+    monitor = commands.add_parser(
+        "monitor", help="live loss plots in a browser; reads saved histories"
+    )
     monitor.add_argument("--run-dir", type=Path, required=True)
     monitor.add_argument("--port", type=int, default=8765)
-    study = commands.add_parser("plot-study", help="paper-style panels for new run outputs")
+    study = commands.add_parser(
+        "plot-study", help="paper-style panels for new run outputs"
+    )
     study.add_argument("--segment-dirs", nargs="+", type=Path, required=True)
     study.add_argument("--labels", nargs="+")
     study.add_argument("--epochs", nargs="+", type=int)
     study.add_argument("--output", type=Path)
-    example = commands.add_parser("check-physics", help="opt-in prescribed-field scientific check")
-    example.add_argument("--case", choices=("still_water", "manufactured_fields", "linear_standing_wave"),
-                         required=True)
+    example = commands.add_parser(
+        "check-physics", help="opt-in prescribed-field scientific check"
+    )
+    example.add_argument(
+        "--case",
+        choices=("still_water", "manufactured_fields", "linear_standing_wave"),
+        required=True,
+    )
     evaluation = commands.add_parser("evaluate")
     evaluation.add_argument("--config", type=Path, required=True)
     evaluation.add_argument("--checkpoint", type=Path, required=True)
     evaluation.add_argument("--output", type=Path, required=True)
     evaluation.add_argument("--segment", type=int, default=0)
-    evaluation.add_argument("--device", help="override archived device for evaluation")
+    evaluation.add_argument(
+        "--device", help="override archived device for evaluation"
+    )
     evaluation.add_argument("--handoff", type=Path)
     for name in ("plot", "animate"):
         command = commands.add_parser(name)
         if name == "plot":
             paths = command.add_mutually_exclusive_group(required=True)
-            paths.add_argument("--segment-dir", type=Path, help="one SWE time segment")
-            paths.add_argument("--run-dir", type=Path, help="SWE, heat or Burgers run")
+            paths.add_argument(
+                "--segment-dir", type=Path, help="one SWE time segment"
+            )
+            paths.add_argument(
+                "--run-dir", type=Path, help="SWE, heat or Burgers run"
+            )
         else:
             command.add_argument("--segment-dir", type=Path, required=True)
         if name == "animate":
@@ -61,12 +97,20 @@ def main(argv=None):
                 choices=("solution", "training", "residuals"),
                 default="solution",
             )
-            command.add_argument("--field", choices=("u", "zeta", "h"), default="zeta")
+            command.add_argument(
+                "--field", choices=("u", "zeta", "h"), default="zeta"
+            )
             command.add_argument("--fps", type=int, default=8)
     reference = commands.add_parser("import-reference")
     reference.add_argument("--u", type=Path, required=True)
-    reference.add_argument("--zeta", "--h", dest="zeta", type=Path, required=True,
-                           help="elevation array (legacy --h also accepted)")
+    reference.add_argument(
+        "--zeta",
+        "--h",
+        dest="zeta",
+        type=Path,
+        required=True,
+        help="elevation array (legacy --h also accepted)",
+    )
     reference.add_argument("--output", type=Path, required=True)
     reference.add_argument(
         "--dt",
@@ -90,7 +134,9 @@ def main(argv=None):
         help="create SYNTHETIC software-test data, not a scientific reference",
     )
     test_data.add_argument(
-        "--output", type=Path, default=Path("software_tests/synthetic_data/synthetic.nc")
+        "--output",
+        type=Path,
+        default=Path("software_tests/synthetic_data/synthetic.nc"),
     )
     args = parser.parse_args(argv)
     root = args.root.resolve()
@@ -100,10 +146,14 @@ def main(argv=None):
 
     if args.command == "train":
         import yaml
+
         path = resolve(args.config or default_case_path(args.equation))
-        equation = (yaml.safe_load(path.read_text()) or {}).get("equation", args.equation)
+        equation = (yaml.safe_load(path.read_text()) or {}).get(
+            "equation", args.equation
+        )
         if equation == "swe":
             from .training import train
+
             loader = load_config
         else:
             from .heat_and_burgers.training import train, load_config as loader
@@ -116,24 +166,39 @@ def main(argv=None):
             config["cpu_threads"] = args.cpu_threads
         if args.initial_checkpoint is not None:
             if equation == "swe":
-                parser.error("--initial-checkpoint currently applies to heat and Burgers")
-            config["training"]["initial_checkpoint"] = str(args.initial_checkpoint)
+                parser.error(
+                    "--initial-checkpoint currently applies to heat and Burgers"
+                )
+            config["training"]["initial_checkpoint"] = str(
+                args.initial_checkpoint
+            )
         print(train(config, root, args.run_id))
     elif args.command == "monitor":
         from .live_losses import serve_losses
+
         serve_losses(resolve(args.run_dir), args.port)
     elif args.command == "resume":
         import json
+
         directory = resolve(args.run_dir)
-        if json.loads((directory / "config.json").read_text())["equation"] == "swe":
+        if (
+            json.loads((directory / "config.json").read_text())["equation"]
+            == "swe"
+        ):
             from .training import train
+
             loader = load_config
         else:
             from .heat_and_burgers.training import train, load_config as loader
-        print(train(loader(directory / "config.yaml"), root, resume_run=directory))
+        print(
+            train(
+                loader(directory / "config.yaml"), root, resume_run=directory
+            )
+        )
     elif args.command == "check-physics":
         import json
         from .equation_checks import check
+
         print(json.dumps(check(args.case), indent=2))
     elif args.command == "evaluate":
         from .training import evaluate_checkpoint
@@ -155,6 +220,7 @@ def main(argv=None):
         )
     elif args.command == "plot":
         from .plotting import plot_segment
+
         if args.segment_dir:
             print(plot_segment(resolve(args.segment_dir)))
         else:
@@ -165,11 +231,19 @@ def main(argv=None):
                         print(plot_segment(segment))
             else:
                 from .heat_and_burgers.training import plot
+
                 print(plot(directory))
     elif args.command == "plot-study":
         from .plotting import plot_study
-        print(plot_study([resolve(path) for path in args.segment_dirs], args.labels,
-                         resolve(args.output) if args.output else None, args.epochs))
+
+        print(
+            plot_study(
+                [resolve(path) for path in args.segment_dirs],
+                args.labels,
+                resolve(args.output) if args.output else None,
+                args.epochs,
+            )
+        )
     elif args.command == "animate":
         from .plotting import animate_segment, animate_history
 

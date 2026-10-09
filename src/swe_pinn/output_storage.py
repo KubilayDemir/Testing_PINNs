@@ -32,14 +32,17 @@ def replace_file(temp, path):
         except PermissionError:
             if attempt == 7:
                 raise
-            time.sleep(0.05 * 2 ** attempt)
+            time.sleep(0.05 * 2**attempt)
 
 
 def write_json(path, value):
     path = Path(path)
     temp = path.with_suffix(path.suffix + ".tmp")
     try:
-        temp.write_text(json.dumps(value, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+        temp.write_text(
+            json.dumps(value, indent=2, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
         replace_file(temp, path)
     finally:
         temp.unlink(missing_ok=True)
@@ -56,6 +59,7 @@ def save_config(directory, config):
 
 def provenance(root, reference, config):
     import torch
+
     root = reproduction_root(root)
     try:
         revision = subprocess.check_output(
@@ -90,15 +94,23 @@ def provenance(root, reference, config):
             )
         },
         "reference_path": str(reference),
-        "reference_sha256": sha256(reference) if reference is not None else None,
+        "reference_sha256": (
+            sha256(reference) if reference is not None else None
+        ),
         "seed": config["seed"],
         "device": config["device"],
         "dtype": "float32",
         "hardware": {
-            "processor": platform.processor(), "cpu_threads": torch.get_num_threads(),
-            "cuda_runtime": torch.version.cuda, "cudnn": torch.backends.cudnn.version(),
-            "gpu": torch.cuda.get_device_name(config["device"])
-            if str(config["device"]).startswith("cuda") and torch.cuda.is_available() else None,
+            "processor": platform.processor(),
+            "cpu_threads": torch.get_num_threads(),
+            "cuda_runtime": torch.version.cuda,
+            "cudnn": torch.backends.cudnn.version(),
+            "gpu": (
+                torch.cuda.get_device_name(config["device"])
+                if str(config["device"]).startswith("cuda")
+                and torch.cuda.is_available()
+                else None
+            ),
         },
         ("checkpoint_selection"): (
             "minimum sum of dimensional reference MSE(u) and MSE(zeta),"
@@ -118,38 +130,76 @@ def source_files(root):
     """Explicit source allowlist includes untracked code, excludes data and secrets."""
     root = reproduction_root(root)
     paths = []
-    for directory in ("src/swe_pinn", "training_cases", "publication_cases", "software_tests", "scripts", "docs", "cluster_jobs",
-                      "reference_solutions/shallow_water"):
-        paths.extend(path for path in (root / directory).rglob("*")
-                     if path.is_file() and path.suffix in (".py", ".yaml", ".json", ".md", ".sh", ".ps1", ".f90")
-                     and "__pycache__" not in path.parts)
+    for directory in (
+        "src/swe_pinn",
+        "training_cases",
+        "publication_cases",
+        "software_tests",
+        "scripts",
+        "docs",
+        "cluster_jobs",
+        "reference_solutions/shallow_water",
+    ):
+        paths.extend(
+            path
+            for path in (root / directory).rglob("*")
+            if path.is_file()
+            and path.suffix
+            in (".py", ".yaml", ".json", ".md", ".sh", ".ps1", ".f90")
+            and "__pycache__" not in path.parts
+        )
     paths.extend(
-        root / name for name in
-        ("README.md", "LICENSE", "src/swe_pinn/optimizers/PCGrad_LICENSE", "pyproject.toml", "environment.yaml",
-         "requirements-tested.txt") if
-        (root / name).is_file())
+        root / name
+        for name in (
+            "README.md",
+            "LICENSE",
+            "src/swe_pinn/optimizers/PCGrad_LICENSE",
+            "pyproject.toml",
+            "environment.yaml",
+            "requirements-tested.txt",
+        )
+        if (root / name).is_file()
+    )
     if not (root / "src/swe_pinn").is_dir():
         package = Path(__file__).resolve().parent
-        paths.extend(path for path in package.rglob("*") if path.is_file()
-                     and path.suffix in (".py", ".yaml", ".json") and "__pycache__" not in path.parts)
+        paths.extend(
+            path
+            for path in package.rglob("*")
+            if path.is_file()
+            and path.suffix in (".py", ".yaml", ".json")
+            and "__pycache__" not in path.parts
+        )
     return sorted(paths)
 
 
 def source_manifest(root):
     root = reproduction_root(root)
-    return {path.relative_to(root).as_posix(): sha256(path) for path in source_files(root)}
+    return {
+        path.relative_to(root).as_posix(): sha256(path)
+        for path in source_files(root)
+    }
 
 
 def save_reproduction_bundle(directory, root):
     directory, root = Path(directory), reproduction_root(root)
     manifest = source_manifest(root)
-    with zipfile.ZipFile(directory / "source.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(
+        directory / "source.zip", "w", zipfile.ZIP_DEFLATED
+    ) as archive:
         for path in manifest:
             archive.write(root / path, path)
     write_json(directory / "source_manifest.json", manifest)
-    packages = sorted({f"{dist.metadata['Name']}=={dist.version}" for dist in distributions()
-                       if dist.metadata.get("Name") and dist.metadata["Name"] != "swe-pinn-reflections"})
-    (directory / "environment-freeze.txt").write_text("\n".join(packages) + "\n", encoding="utf-8")
+    packages = sorted(
+        {
+            f"{dist.metadata['Name']}=={dist.version}"
+            for dist in distributions()
+            if dist.metadata.get("Name")
+            and dist.metadata["Name"] != "swe-pinn-reflections"
+        }
+    )
+    (directory / "environment-freeze.txt").write_text(
+        "\n".join(packages) + "\n", encoding="utf-8"
+    )
     return sha256(directory / "source.zip")
 
 
@@ -187,18 +237,18 @@ def history_dataset(model, metadata):
         },
     )
     for name in (
-            "loss_total",
-            "loss_pde",
-            "loss_bc",
-            "loss_ic",
-            "loss_momentum",
-            "loss_continuity",
-            "loss_ic_u",
-            "loss_ic_zeta",
-            "loss_bc_left",
-            "loss_bc_right",
-            "mse_ref_u",
-            "mse_ref_zeta",
+        "loss_total",
+        "loss_pde",
+        "loss_bc",
+        "loss_ic",
+        "loss_momentum",
+        "loss_continuity",
+        "loss_ic_u",
+        "loss_ic_zeta",
+        "loss_bc_left",
+        "loss_bc_right",
+        "mse_ref_u",
+        "mse_ref_zeta",
     ):
         physical_units = {
             "mse_ref_u": "m2 s-2",
@@ -239,9 +289,9 @@ def history_dataset(model, metadata):
     if model.adaptive_loss_weights:
         ds = ds.assign_coords(weight_step=("weight_step", model.weight_steps))
         for key, attr in (
-                ("weight_pde", "pde_weight_history"),
-                ("weight_ic", "ic_weight_history"),
-                ("weight_bc", "bc_weight_history"),
+            ("weight_pde", "pde_weight_history"),
+            ("weight_ic", "ic_weight_history"),
+            ("weight_bc", "bc_weight_history"),
         ):
             ds[key] = (
                 "weight_step",
@@ -269,20 +319,20 @@ def history_dataset(model, metadata):
             ),
         )
         for key, attr, factor, units in (
-                ("u_pred", "velocity_history", speed, "m s-1"),
-                ("zeta_pred", "elevation_history", height, "m"),
-                (
-                        "momentum_residual",
-                        "momentum_residual_history",
-                        1,
-                        "1" if model.nondimensionalize else "m s-2",
-                ),
-                (
-                        "continuity_residual",
-                        "continuity_residual_history",
-                        1,
-                        "1" if model.nondimensionalize else "m s-1",
-                ),
+            ("u_pred", "velocity_history", speed, "m s-1"),
+            ("zeta_pred", "elevation_history", height, "m"),
+            (
+                "momentum_residual",
+                "momentum_residual_history",
+                1,
+                "1" if model.nondimensionalize else "m s-2",
+            ),
+            (
+                "continuity_residual",
+                "continuity_residual_history",
+                1,
+                "1" if model.nondimensionalize else "m s-1",
+            ),
         ):
             values = getattr(model, attr)
             if values:

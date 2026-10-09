@@ -67,7 +67,9 @@ def test_reference_rejects_wrong_cell_centres(setup_run):
     _, reference, root = setup_run
     with xr.open_dataset(reference) as source:
         ds = source.load()
-    ds = ds.assign_coords(x_zeta=("x_zeta", ds.x_zeta.values + 10, dict(ds.x_zeta.attrs)))
+    ds = ds.assign_coords(
+        x_zeta=("x_zeta", ds.x_zeta.values + 10, dict(ds.x_zeta.attrs))
+    )
     invalid = root / "wrong_grid.nc"
     ds.to_netcdf(invalid)
     with pytest.raises(ValueError, match="cell centres"):

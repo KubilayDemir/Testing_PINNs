@@ -19,38 +19,74 @@ def convert(source, output, count, u_slice=None, zeta_slice=None):
     output.mkdir(parents=True, exist_ok=False)
     records = {}
     for field, subdir, prefix, indices in (
-            ("u", "udata", "u", u_slice), ("zeta", "zdata", "z", zeta_slice),
+        ("u", "udata", "u", u_slice),
+        ("zeta", "zdata", "z", zeta_slice),
     ):
         selection = slice(*indices) if indices else slice(None)
-        first = np.loadtxt(source / subdir / f"{prefix}0000.dat", ndmin=1)[selection]
+        first = np.loadtxt(source / subdir / f"{prefix}0000.dat", ndmin=1)[
+            selection
+        ]
         if not len(first):
             raise ValueError("Selected spatial slice is empty")
         path = output / f"{field}.npy"
-        array = np.lib.format.open_memmap(path, mode="w+", dtype=np.float64, shape=(len(first), count))
+        array = np.lib.format.open_memmap(
+            path, mode="w+", dtype=np.float64, shape=(len(first), count)
+        )
         for index in range(count):
-            values = np.loadtxt(source / subdir / f"{prefix}{index:04d}.dat", ndmin=1)[selection]
+            values = np.loadtxt(
+                source / subdir / f"{prefix}{index:04d}.dat", ndmin=1
+            )[selection]
             if values.shape != first.shape or not np.isfinite(values).all():
                 raise ValueError(f"Invalid {field} snapshot {index}")
             array[:, index] = values
         array.flush()
         del array
-        records[field] = {"file": path.name, "shape": [len(first), count], "row_slice": indices}
-    (output / "conversion.json").write_text(json.dumps({
-        "source": str(source.resolve()), "fields": records,
-        "note": "Values preserved; verify coordinates, ghost rows and solver time labeling before import-reference.",
-    }, indent=2) + "\n")
+        records[field] = {
+            "file": path.name,
+            "shape": [len(first), count],
+            "row_slice": indices,
+        }
+    (output / "conversion.json").write_text(
+        json.dumps(
+            {
+                "source": str(source.resolve()),
+                "fields": records,
+                "note": (
+                    "Values preserved; verify coordinates, ghost rows "
+                    "and solver time labeling before import-reference."
+                ),
+            },
+            indent=2,
+        )
+        + "\n"
+    )
     return output
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source", type=Path, required=True, help="impdat directory")
+    parser.add_argument(
+        "--source", type=Path, required=True, help="impdat directory"
+    )
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--count", type=int, required=True, help="number of snapshots, including index 0000")
-    parser.add_argument("--u-slice", nargs=3, type=int, metavar=("START", "STOP", "STEP"))
-    parser.add_argument("--zeta-slice", nargs=3, type=int, metavar=("START", "STOP", "STEP"))
+    parser.add_argument(
+        "--count",
+        type=int,
+        required=True,
+        help="number of snapshots, including index 0000",
+    )
+    parser.add_argument(
+        "--u-slice", nargs=3, type=int, metavar=("START", "STOP", "STEP")
+    )
+    parser.add_argument(
+        "--zeta-slice", nargs=3, type=int, metavar=("START", "STOP", "STEP")
+    )
     args = parser.parse_args()
-    print(convert(args.source, args.output, args.count, args.u_slice, args.zeta_slice))
+    print(
+        convert(
+            args.source, args.output, args.count, args.u_slice, args.zeta_slice
+        )
+    )
 
 
 if __name__ == "__main__":

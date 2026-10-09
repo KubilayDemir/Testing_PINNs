@@ -3,13 +3,15 @@
 SWE publication case. `config.yaml` defines a new training run;
 `trained_models/` contains supplied weights and their compatible settings.
 
-```bash
-python -m swe_pinn train --config publication_cases/reference_loss_training/viscous/config.yaml --device cuda:0
-python -m swe_pinn evaluate \
-  --config publication_cases/reference_loss_training/viscous/trained_models/config.yaml \
-  --checkpoint publication_cases/reference_loss_training/viscous/trained_models/trained.pt \
-  --output training_results/publication_evaluation/viscous --device cpu
-```
+From the repository root (Bash):
 
-The evaluation example uses the first stored model. Select another model
-with its adjacent configuration to evaluate a different initialization.
+```bash
+case=publication_cases/reference_loss_training/viscous
+model="$case/trained_models"
+python -m swe_pinn train --config "$case/config.yaml" --device cuda:0
+python -m swe_pinn evaluate \
+  --config "$model/config.yaml" \
+  --checkpoint "$model/trained.pt" \
+  --output "training_results/publication_evaluation/$case" \
+  --device cpu
+```

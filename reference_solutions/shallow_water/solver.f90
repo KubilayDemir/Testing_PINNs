@@ -112,7 +112,8 @@ do i = 1,nx,1
   if((d(i).gt.0.1).and.(d(ip).gt.0.1)) then
     hm = 0.5*(h(i)+h(ip))
     us(i) = u(i)- dt*cd/hm*u(i)*abs(u(i)) - (1.-wimp)*dt*g*(zeta(ip)-zeta(i))/dx &
-            + dt * AH * (u(i+1) - 2. * u(i) + u(i-1)) / (dx**2.) + adv * adv_coefficient
+            + dt * AH * (u(i+1) - 2. * u(i) + u(i-1)) / (dx**2.) &
+            + adv * adv_coefficient
   else
     us(i) = 0.
   endif

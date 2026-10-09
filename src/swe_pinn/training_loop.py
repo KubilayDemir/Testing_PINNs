@@ -54,6 +54,19 @@ def fit(model, resume=None):
             model.ubc_dataset,
             model.ic_dataset,
         )
+        strategy = model.training_strategy
+        if strategy.active:
+            from .training_methods.controller import prepare_swe
+
+            prepare_swe(model)
+            if (epoch - 1) % strategy.settings["update_period"] == 0:
+                dataset = model.pde_dataset
+                dataset.tx = strategy.adapt(model, dataset.tx).requires_grad_(
+                    True
+                )
+                dataset.t, dataset.x = dataset.tx[:, :1], dataset.tx[:, 1:2]
+            if not model.minibatch_training:
+                model._use_full_pool()
         sizes = (
             model.pde_batch_size,
             model.bc_batch_size,
@@ -63,7 +76,8 @@ def fit(model, resume=None):
         loaders = [
             DataLoader(
                 ds.tx.detach() if model.dataloader_workers else ds,
-                batch_size=size, shuffle=True,
+                batch_size=size,
+                shuffle=True,
                 num_workers=model.dataloader_workers,
                 pin_memory=model.pin_memory,
             )
@@ -81,9 +95,9 @@ def fit(model, resume=None):
                         iterators[index] = iter(loader)
                         batch = next(iterators[index])
                     batches.append(
-                        batch.detach().to(
-                            model.device, non_blocking=model.pin_memory
-                        ).requires_grad_(True)
+                        batch.detach()
+                        .to(model.device, non_blocking=model.pin_memory)
+                        .requires_grad_(True)
                     )
                 (
                     model.pde_points,
@@ -91,19 +105,21 @@ def fit(model, resume=None):
                     model.right_boundary_points,
                     model.initial_condition_sampling_points,
                 ) = batches
+            if strategy.active:
+                prepare_swe(model)
             if model.use_pcgrad and not model.train_on_solution:
                 model.closure()
                 losses = []
                 if model.use_pde_loss:
                     losses.append(model.weight_pde * model.loss_pde)
                 if (
-                        model.use_ic_loss
-                        and not model.initial_condition_transition_function
+                    model.use_ic_loss
+                    and not model.initial_condition_transition_function
                 ):
                     losses.append(model.weight_ic * model.loss_ic)
                 if (
-                        model.use_bc_loss
-                        and not model.boundary_condition_transition_function
+                    model.use_bc_loss
+                    and not model.boundary_condition_transition_function
                 ):
                     losses.append(model.weight_bc * model.loss_bc)
                 model.optimizer.pc_backward(losses)
@@ -136,14 +152,13 @@ def fit(model, resume=None):
                 raise FloatingPointError(
                     f"Non-finite training loss at epoch {epoch}"
                 )
+            strategy.finish_step(model.loss_pde)
             if model.adaptive_loss_weights:
                 model.save_weight_history()
                 model.weight_steps.append(
                     (epoch - 1) * model.iterations_per_epoch + iteration + 1
                 )
-            model.time_per_iteration.append(
-                time.perf_counter() - step_start
-            )
+            model.time_per_iteration.append(time.perf_counter() - step_start)
         # Evaluate every epoch so output frequency cannot hide a better checkpoint.
         with torch.no_grad():
             model.compute_reference_error()
@@ -164,11 +179,27 @@ def fit(model, resume=None):
         elif epoch % model.snapshot_period == 0:
             model._record_snapshot(epoch)
         model.time_per_epoch.append(time.perf_counter() - started)
+        if strategy.active and model.checkpoint_dir is not None:
+            from .output_storage import write_json
+
+            write_json(
+                model.checkpoint_dir.parent / "training_strategy.json",
+                dict(epoch=epoch, **strategy.summary()),
+            )
         if model.history_writer is not None:
             model.history_writer.timing(model, epoch)
-        if model.checkpoint_dir is not None and model.checkpoint_period and epoch % model.checkpoint_period == 0:
-            save_torch(model.state_dict(), model.checkpoint_dir / f"epoch_{epoch:06d}.pt")
-        if model.resume_period and (epoch % model.resume_period == 0 or epoch == model.epochs):
+        if (
+            model.checkpoint_dir is not None
+            and model.checkpoint_period
+            and epoch % model.checkpoint_period == 0
+        ):
+            save_torch(
+                model.state_dict(),
+                model.checkpoint_dir / f"epoch_{epoch:06d}.pt",
+            )
+        if model.resume_period and (
+            epoch % model.resume_period == 0 or epoch == model.epochs
+        ):
             save_resume(model, epoch)
     if not model.batch_diagnostics:
         model._use_full_pool()

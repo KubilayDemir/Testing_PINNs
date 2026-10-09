@@ -80,3 +80,23 @@ output:
   batch_diagnostics: true
   keep_improving_checkpoints: false
   checkpoint_period: 0
+training_methods:
+  causal_weighting: none  # none, residual, attention
+  sampling: lhs  # lhs, residual, causal_as, r3, causal_r3
+  time_bins: 16
+  probe_points: 1024
+  candidate_points: 10000
+  update_period: 10  # completed epochs between sampling updates
+  epsilon: 1.0
+  sampling_power: 1.0
+  uniform_fraction: 0.2
+  attention_scale: 1000.0
+  gate_initial: -0.5
+  gate_steepness: 5.0
+  gate_learning_rate: 0.001
+  gate_tolerance: 100.0
+  gate_max_step: 0.1
+  power_schedule: fixed  # fixed, temporal_alignment (Causal AS)
+  alignment_rate: 0.1
+  alignment_steepness: 5.0
+  alignment_threshold: 0.9

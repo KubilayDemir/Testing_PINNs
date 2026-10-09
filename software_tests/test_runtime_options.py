@@ -13,10 +13,13 @@ from swe_pinn.training import train, evaluate_checkpoint
 from swe_pinn.plotting import plot_study, snapshot_epochs, load_snapshot
 
 
-@pytest.mark.parametrize("options", [{}, {"split_networks": True}, {"mixed_activations": True}])
+@pytest.mark.parametrize(
+    "options", [{}, {"split_networks": True}, {"mixed_activations": True}]
+)
 def test_checkpointed_swe_derivatives(setup_run, options):
     from swe_pinn.config import model_kwargs
     from swe_pinn.model import PINN
+
     config, reference, _ = setup_run
     config["network"].update(options)
     ordinary = PINN(**model_kwargs(config, reference))
@@ -28,8 +31,14 @@ def test_checkpointed_swe_derivatives(setup_run, options):
     second = checked.pde_residual(points)
     for a, b in zip(first, second):
         torch.testing.assert_close(a, b)
-    expected = torch.autograd.grad(sum(value.square().mean() for value in first), tuple(ordinary.parameters()))
-    actual = torch.autograd.grad(sum(value.square().mean() for value in second), tuple(checked.parameters()))
+    expected = torch.autograd.grad(
+        sum(value.square().mean() for value in first),
+        tuple(ordinary.parameters()),
+    )
+    actual = torch.autograd.grad(
+        sum(value.square().mean() for value in second),
+        tuple(checked.parameters()),
+    )
     for a, b in zip(expected, actual):
         torch.testing.assert_close(a, b)
 
@@ -68,11 +77,18 @@ def test_streaming_and_batched_diagnostics_preserve_training(setup_run):
     config, _, root = setup_run
     baseline = train(config, root, "baseline")
     optional = deepcopy(config)
-    optional["output"].update(stream_history=True, batch_diagnostics=True,
-                              evaluation_batch_size=7, keep_improving_checkpoints=False)
+    optional["output"].update(
+        stream_history=True,
+        batch_diagnostics=True,
+        evaluation_batch_size=7,
+        keep_improving_checkpoints=False,
+    )
     optional["training"]["reference_on_cpu"] = True
     streamed = train(optional, root, "streamed")
-    assert_same_state(baseline / "segments/000/checkpoints/final.pt", streamed / "segments/000/checkpoints/final.pt")
+    assert_same_state(
+        baseline / "segments/000/checkpoints/final.pt",
+        streamed / "segments/000/checkpoints/final.pt",
+    )
     segment = streamed / "segments/000"
     assert snapshot_epochs(segment) == [0, 1, 2]
     assert (segment / "history.jsonl").exists()
@@ -81,18 +97,29 @@ def test_streaming_and_batched_diagnostics_preserve_training(setup_run):
     with xr.open_dataset(baseline / "segments/000/history.nc") as ds:
         for epoch in (0, 1, 2):
             snapshot = load_snapshot(segment, epoch)
-            np.testing.assert_allclose(snapshot.momentum_residual.values[0], ds.momentum_residual.values[epoch],
-                                       rtol=1e-5, atol=1e-6)
+            np.testing.assert_allclose(
+                snapshot.momentum_residual.values[0],
+                ds.momentum_residual.values[epoch],
+                rtol=1e-5,
+                atol=1e-6,
+            )
     with zipfile.ZipFile(streamed / "source.zip") as bundle:
         assert "src/swe_pinn/physics.py" in bundle.namelist()
     assert plot_study([segment], epochs=[0, 2]).is_dir()
 
 
-@pytest.mark.parametrize("pcgrad,adaptive,resample", [(False, False, 10), (True, True, 1)])
-def test_interrupted_run_resumes_exactly(setup_run, monkeypatch, pcgrad, adaptive, resample):
+@pytest.mark.parametrize(
+    "pcgrad,adaptive,resample", [(False, False, 10), (True, True, 1)]
+)
+def test_interrupted_run_resumes_exactly(
+    setup_run, monkeypatch, pcgrad, adaptive, resample
+):
     from swe_pinn import training_checkpoints as runtime
+
     config, _, root = setup_run
-    config["training"].update(resume_period=1, use_pcgrad=pcgrad, adaptive_loss_weights=adaptive)
+    config["training"].update(
+        resume_period=1, use_pcgrad=pcgrad, adaptive_loss_weights=adaptive
+    )
     config["sampling"]["resample_period"] = resample
     config["output"]["stream_history"] = True
     uninterrupted = train(config, root, "uninterrupted")
@@ -109,12 +136,20 @@ def test_interrupted_run_resumes_exactly(setup_run, monkeypatch, pcgrad, adaptiv
     monkeypatch.setattr(runtime, "save_resume", original)
     interrupted = root / "training_results/quick_software_check/interrupted"
     train(config, root, resume_run=interrupted)
-    assert_same_state(uninterrupted / "segments/000/checkpoints/final.pt",
-                      interrupted / "segments/000/checkpoints/final.pt")
-    assert_same_state(uninterrupted / "segments/000/checkpoints/best.pt",
-                      interrupted / "segments/000/checkpoints/best.pt")
-    epochs = [json.loads(line)["epoch"] for line in
-              (interrupted / "segments/000/history.jsonl").read_text().splitlines()]
+    assert_same_state(
+        uninterrupted / "segments/000/checkpoints/final.pt",
+        interrupted / "segments/000/checkpoints/final.pt",
+    )
+    assert_same_state(
+        uninterrupted / "segments/000/checkpoints/best.pt",
+        interrupted / "segments/000/checkpoints/best.pt",
+    )
+    epochs = [
+        json.loads(line)["epoch"]
+        for line in (interrupted / "segments/000/history.jsonl")
+        .read_text()
+        .splitlines()
+    ]
     assert epochs == [0, 1, 2]
 
 
@@ -124,11 +159,22 @@ def test_soft_initial_handoff_with_time_decomposition(setup_run):
     config["network"].update(enforce_bc=True, enforce_ic=True)
     run = train(config, root, "hard-handoff")
     checkpoint = run / "segments/001/checkpoints/best.pt"
-    replay = evaluate_checkpoint(config, root, checkpoint, root / "replay", 1, run / "segments/000/handoff.nc")
-    with xr.open_dataset(run / "segments/001/evaluation.nc") as original, xr.open_dataset(
-            replay / "evaluation.nc") as repeated:
+    replay = evaluate_checkpoint(
+        config,
+        root,
+        checkpoint,
+        root / "replay",
+        1,
+        run / "segments/000/handoff.nc",
+    )
+    with (
+        xr.open_dataset(run / "segments/001/evaluation.nc") as original,
+        xr.open_dataset(replay / "evaluation.nc") as repeated,
+    ):
         np.testing.assert_array_equal(original.zeta_pred, repeated.zeta_pred)
-        assert not np.allclose(original.ic_zeta_pred, original.ic_zeta_target, atol=1e-6)
+        assert not np.allclose(
+            original.ic_zeta_pred, original.ic_zeta_target, atol=1e-6
+        )
         np.testing.assert_allclose(original.u_bc_left, 0, atol=1e-6)
 
 
@@ -139,4 +185,6 @@ def test_split_network_optional_methods(setup_run, siren, adaptive):
     config["training"].update(adaptive_loss_weights=adaptive)
     config["output"].update(save_predictions=False, save_residuals=False)
     run = train(config, root, "split")
-    assert json.loads((run / "status.json").read_text())["status"] == "complete"
+    assert (
+        json.loads((run / "status.json").read_text())["status"] == "complete"
+    )

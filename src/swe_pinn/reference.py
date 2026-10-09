@@ -37,7 +37,9 @@ def load_reference(path, time_bounds=None):
                 )
             )
             if ds.sizes["time"] < 2:
-                raise ValueError("Requested interval contains fewer than two reference times")
+                raise ValueError(
+                    "Requested interval contains fewer than two reference times"
+                )
         # Materialize only the selected segment, rather than the entire run.
         ds = ds.load()
     validate_dataset(ds)
@@ -50,27 +52,27 @@ def validate_dataset(ds):
     """Validate the schema and physical coordinates before using or writing a file."""
     ds = canonical_dataset(ds)
     for name, units in (
-            ("time", "s"),
-            ("x_u", "m"),
-            ("x_zeta", "m"),
-            ("u_ref", "m s-1"),
-            ("zeta_ref", "m"),
+        ("time", "s"),
+        ("x_u", "m"),
+        ("x_zeta", "m"),
+        ("u_ref", "m s-1"),
+        ("zeta_ref", "m"),
     ):
         if name not in ds:
             raise ValueError(f"Reference file requires {name}")
         if ds[name].attrs.get("units") != units:
             raise ValueError(f"{name} must have units={units!r}")
         if (
-                ds[name].dtype.kind not in "fiu"
-                or not np.isfinite(ds[name].values).all()
+            ds[name].dtype.kind not in "fiu"
+            or not np.isfinite(ds[name].values).all()
         ):
             raise ValueError(f"{name} must contain finite real numbers")
     for name in ("time", "x_u", "x_zeta"):
         values = ds[name].values
         if (
-                values.ndim != 1
-                or len(values) < 2
-                or not np.all(np.diff(values) > 0)
+            values.ndim != 1
+            or len(values) < 2
+            or not np.all(np.diff(values) > 0)
         ):
             raise ValueError(
                 f"{name} must be strictly increasing with at least two points"
@@ -80,8 +82,8 @@ def validate_dataset(ds):
                 f"{name} must be its own one-dimensional coordinate"
             )
     for name, expected in (
-            ("u_ref", {"x_u", "time"}),
-            ("zeta_ref", {"x_zeta", "time"}),
+        ("u_ref", {"x_u", "time"}),
+        ("zeta_ref", {"x_zeta", "time"}),
     ):
         if set(ds[name].dims) != expected:
             raise ValueError(f"{name} requires dimensions {sorted(expected)}")
@@ -100,17 +102,17 @@ def validate_dataset(ds):
 
 
 def import_arrays(
-        u_path, zeta_path, output, dt, dx, x_min, t_start=0.0, source=""
+    u_path, zeta_path, output, dt, dx, x_min, t_start=0.0, source=""
 ):
     """Convert legacy (space,time) arrays without changing their values."""
     u, zeta = np.load(u_path, allow_pickle=False, mmap_mode="r"), np.load(
         zeta_path, allow_pickle=False, mmap_mode="r"
     )
     if (
-            u.ndim != 2
-            or zeta.ndim != 2
-            or u.shape[1] != zeta.shape[1]
-            or u.shape[0] != zeta.shape[0] + 1
+        u.ndim != 2
+        or zeta.ndim != 2
+        or u.shape[1] != zeta.shape[1]
+        or u.shape[0] != zeta.shape[0] + 1
     ):
         raise ValueError(
             "Expected u[n_x+1,n_time] and zeta[n_x,n_time] on a staggered grid"

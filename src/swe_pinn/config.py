@@ -7,7 +7,11 @@ import math
 
 import yaml
 
-CASE_DIRECTORIES = {"swe": "shallow_water", "heat": "heat_diffusion", "burgers": "viscous_burgers"}
+CASE_DIRECTORIES = {
+    "swe": "shallow_water",
+    "heat": "heat_diffusion",
+    "burgers": "viscous_burgers",
+}
 
 
 def default_case_path(equation):
@@ -27,15 +31,15 @@ def _merge(base, overrides, prefix=""):
             if isinstance(expected, bool) and not isinstance(value, bool):
                 raise ValueError(f"{prefix}{key} must be a YAML boolean")
             if (
-                    isinstance(expected, int)
-                    and not isinstance(expected, bool)
-                    and (not isinstance(value, int) or isinstance(value, bool))
+                isinstance(expected, int)
+                and not isinstance(expected, bool)
+                and (not isinstance(value, int) or isinstance(value, bool))
             ):
                 raise ValueError(f"{prefix}{key} must be an integer")
             if isinstance(expected, float) and (
-                    isinstance(value, bool)
-                    or not isinstance(value, (int, float))
-                    or not math.isfinite(value)
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(value)
             ):
                 raise ValueError(f"{prefix}{key} must be a finite number")
             if isinstance(expected, str) and not isinstance(value, str):
@@ -61,15 +65,18 @@ def load_config(path, overrides=None):
 
 
 def validate(c):
+    from .training_methods import validate_methods
+
+    validate_methods(c)
     if c["equation"] != "swe":
         raise ValueError("This configuration is for equation: swe")
     if c["schema_version"] != 1:
         raise ValueError("Unsupported configuration schema_version")
     if (
-            not isinstance(c["experiment"], str)
-            or not c["experiment"]
-            or c["experiment"] in (".", "..")
-            or Path(c["experiment"]).name != c["experiment"]
+        not isinstance(c["experiment"], str)
+        or not c["experiment"]
+        or c["experiment"] in (".", "..")
+        or Path(c["experiment"]).name != c["experiment"]
     ):
         raise ValueError("experiment must be a single directory name")
     for section, keys in {
@@ -77,12 +84,12 @@ def validate(c):
         "physics": ("gravity", "mean_depth"),
         "sampling": ("n_pde", "n_bc", "n_ic", "resample_period"),
         "training": (
-                "epochs",
-                "pde_batch_size",
-                "bc_batch_size",
-                "ic_batch_size",
-                "report_period",
-                "learning_rate",
+            "epochs",
+            "pde_batch_size",
+            "bc_batch_size",
+            "ic_batch_size",
+            "report_period",
+            "learning_rate",
         ),
         "output": ("snapshot_period", "evaluation_batch_size"),
         "domain": ("n_time_segments",),
@@ -90,10 +97,10 @@ def validate(c):
         for key in keys:
             value = c[section][key]
             if (
-                    isinstance(value, bool)
-                    or not isinstance(value, (float, int))
-                    or not math.isfinite(value)
-                    or value <= 0
+                isinstance(value, bool)
+                or not isinstance(value, (float, int))
+                or not math.isfinite(value)
+                or value <= 0
             ):
                 raise ValueError(
                     f"{section}.{key} must be positive and finite"
@@ -101,34 +108,34 @@ def validate(c):
     for key in ("time", "space"):
         bounds = c["domain"][key]
         if (
-                not isinstance(bounds, list)
-                or len(bounds) != 2
-                or not all(
-            isinstance(v, (int, float)) and math.isfinite(v)
-            for v in bounds
-        )
-                or bounds[0] >= bounds[1]
+            not isinstance(bounds, list)
+            or len(bounds) != 2
+            or not all(
+                isinstance(v, (int, float)) and math.isfinite(v)
+                for v in bounds
+            )
+            or bounds[0] >= bounds[1]
         ):
             raise ValueError(
                 f"domain.{key} must contain two increasing finite values"
             )
-    # The inherited transition functions assume initial time zero and a symmetric
+    # The transition functions assume initial time zero and a symmetric
     # domain.
     if c["domain"]["time"][0] != 0:
         raise ValueError(
             "The Gaussian initial condition requires domain.time to begin at zero"
         )
     if c["network"]["enforce_bc"] and (
-            c["domain"]["space"][0] != -c["domain"]["space"][1]
+        c["domain"]["space"][0] != -c["domain"]["space"][1]
     ):
         raise ValueError(
             "Boundary transition functions require a symmetric spatial domain"
         )
     layers = c["network"]["hidden_layers"]
     if (
-            not isinstance(layers, list)
-            or not layers
-            or not all(type(n) is int and n > 0 for n in layers)
+        not isinstance(layers, list)
+        or not layers
+        or not all(type(n) is int and n > 0 for n in layers)
     ):
         raise ValueError(
             "network.hidden_layers must be a nonempty list of positive integers"
@@ -140,7 +147,9 @@ def validate(c):
     if c["network"]["ic_transition"] not in ("TF2", "TF3"):
         raise ValueError("network.ic_transition must be TF2 or TF3")
     if c["domain"]["n_time_segments"] > 1 and not c["loss"]["use_ic"]:
-        raise ValueError("Time decomposition requires the soft IC handoff loss")
+        raise ValueError(
+            "Time decomposition requires the soft IC handoff loss"
+        )
     if c["training"]["use_pcgrad"] and c["training"]["optimizer"] != "Adam":
         raise ValueError("PCGrad requires optimizer: Adam")
     search = c["training"]["line_search"]
@@ -153,11 +162,11 @@ def validate(c):
         raise ValueError(f"line_search must be one of {allowed}")
     if c["physics"]["viscosity"] < 0 or c["physics"]["drag"] < 0:
         raise ValueError("viscosity and drag must be nonnegative")
-    if type(c["seed"]) is not int or not 0 <= c["seed"] < 2 ** 32:
+    if type(c["seed"]) is not int or not 0 <= c["seed"] < 2**32:
         raise ValueError("seed must be an integer in [0, 2**32)")
     if (
-            c["training"]["adaptive_loss_weights"]
-            and c["training"]["optimizer"] == "LBFGS"
+        c["training"]["adaptive_loss_weights"]
+        and c["training"]["optimizer"] == "LBFGS"
     ):
         raise ValueError(
             (
@@ -168,24 +177,25 @@ def validate(c):
     if type(c["cpu_threads"]) is not int or c["cpu_threads"] < 1:
         raise ValueError("cpu_threads must be a positive integer")
     for section, key in (
-            ("training", "dataloader_workers"), ("training", "resume_period"),
-            ("output", "checkpoint_period"),
+        ("training", "dataloader_workers"),
+        ("training", "resume_period"),
+        ("output", "checkpoint_period"),
     ):
         if type(c[section][key]) is not int or c[section][key] < 0:
             raise ValueError(f"{section}.{key} must be a nonnegative integer")
     active = (
-            c["loss"]["use_reference"]
-            or c["loss"]["use_pde"]
-            or (c["loss"]["use_bc"] and not c["network"]["enforce_bc"])
-            or (c["loss"]["use_ic"] and not c["network"]["enforce_ic"])
+        c["loss"]["use_reference"]
+        or c["loss"]["use_pde"]
+        or (c["loss"]["use_bc"] and not c["network"]["enforce_bc"])
+        or (c["loss"]["use_ic"] and not c["network"]["enforce_ic"])
     )
     if not active:
         raise ValueError("At least one unconstrained loss must be enabled")
     for key in ("weight_pde", "weight_bc", "weight_ic"):
         if (
-                not isinstance(c["loss"][key], (int, float))
-                or not math.isfinite(c["loss"][key])
-                or c["loss"][key] <= 0
+            not isinstance(c["loss"][key], (int, float))
+            or not math.isfinite(c["loss"][key])
+            or c["loss"][key] <= 0
         ):
             raise ValueError(f"loss.{key} must be positive and finite")
     for key in ("n_pde", "n_bc"):
@@ -197,7 +207,7 @@ def validate(c):
         raise ValueError("epochs must be at least n_time_segments")
     iterations = c["training"]["iterations_per_epoch"]
     if iterations is not None and (
-            type(iterations) is not int or iterations < 1
+        type(iterations) is not int or iterations < 1
     ):
         raise ValueError(
             "iterations_per_epoch must be null or a positive integer"
@@ -205,9 +215,9 @@ def validate(c):
 
 
 def model_kwargs(
-        config, reference_path, segment_id=0, previous=None, checkpoint_dir=None
+    config, reference_path, segment_id=0, previous=None, checkpoint_dir=None
 ):
-    """Translate user settings to the inherited numerical implementation."""
+    """Translate physical case settings into PINN constructor arguments."""
     import torch
     from .optimizers.lbfgs import FullBatchLBFGS
 
@@ -215,20 +225,20 @@ def model_kwargs(
     p, s, d, n, loss, sample, train, out = (
         c[k]
         for k in (
-        "physics",
-        "scales",
-        "domain",
-        "network",
-        "loss",
-        "sampling",
-        "training",
-        "output",
-    )
+            "physics",
+            "scales",
+            "domain",
+            "network",
+            "loss",
+            "sampling",
+            "training",
+            "output",
+        )
     )
     vertical = (
-            s["vertical_factor"]
-            * s["length"] ** 2
-            / (s["time"] ** 2 * p["gravity"])
+        s["vertical_factor"]
+        * s["length"] ** 2
+        / (s["time"] ** 2 * p["gravity"])
     )
     count = d["n_time_segments"]
     bounds = [
@@ -244,6 +254,8 @@ def model_kwargs(
         segment_id < train["epochs"] % count
     )
     return dict(
+        training_methods=c.get("training_methods"),
+        sampling_seed=c["seed"] + segment_id,
         layer_sizes=[2, *n["hidden_layers"], 2],
         activation_function=getattr(torch, n["activation"]),
         activation_checkpointing=n["activation_checkpointing"],
@@ -264,9 +276,12 @@ def model_kwargs(
         batch_resampling_period=sample["resample_period"],
         console_output_period=train["report_period"],
         device=c["device"],
-        gravitational_acceleration=p["gravity"] * h_scale * t_scale ** 2 / x_scale ** 2,
+        gravitational_acceleration=p["gravity"]
+        * h_scale
+        * t_scale**2
+        / x_scale**2,
         average_sea_level=p["mean_depth"] / h_scale,
-        momentum_dissipation=p["viscosity"] * t_scale / x_scale ** 2,
+        momentum_dissipation=p["viscosity"] * t_scale / x_scale**2,
         nonlinear_drag_coefficient=p["drag"],
         initial_perturbation_amplitude=p["amplitude"] / h_scale,
         nondimensionalize=nondim,
@@ -298,7 +313,8 @@ def model_kwargs(
         use_bc_loss=loss["use_bc"],
         use_ic_loss=loss["use_ic"],
         boundary_condition_transition_function=n["enforce_bc"],
-        initial_condition_transition_function=n["enforce_ic"] and segment_id == 0,
+        initial_condition_transition_function=n["enforce_ic"]
+        and segment_id == 0,
         ic_transition=n["ic_transition"],
         split_networks=n["split_networks"],
         momentum_advection=p["momentum_advection"],
@@ -310,11 +326,11 @@ def model_kwargs(
         bc_batch_size=train["bc_batch_size"],
         ic_batch_size=train["ic_batch_size"],
         iterations_per_epoch=train["iterations_per_epoch"]
-                             or (
-                                 max(1, n_pde // train["pde_batch_size"])
-                                 if train["minibatch"]
-                                 else 1
-                             ),
+        or (
+            max(1, n_pde // train["pde_batch_size"])
+            if train["minibatch"]
+            else 1
+        ),
         reference_path=str(reference_path),
         checkpoint_dir=checkpoint_dir,
         snapshot_period=out["snapshot_period"],

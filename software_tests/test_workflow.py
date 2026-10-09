@@ -122,7 +122,9 @@ def test_objectives_and_reporting(setup_run, mode):
     if mode == "transitions":
         with xr.open_dataset(run / "segments/000/evaluation.nc") as ds:
             np.testing.assert_allclose(ds.u_bc_left, 0, atol=1e-6)
-            np.testing.assert_allclose(ds.ic_zeta_pred, ds.ic_zeta_target, atol=1e-6)
+            np.testing.assert_allclose(
+                ds.ic_zeta_pred, ds.ic_zeta_target, atol=1e-6
+            )
 
 
 def test_multisegment_and_deterministic_sampling(setup_run):

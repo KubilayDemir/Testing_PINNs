@@ -12,8 +12,8 @@ def _predict(model, t, x, column, batch_size):
         for start in range(0, len(t), batch_size):
             chunks.append(
                 model(
-                    t[start: start + batch_size].to(model.device),
-                    x[start: start + batch_size].to(model.device),
+                    t[start : start + batch_size].to(model.device),
+                    x[start : start + batch_size].to(model.device),
                 )[:, column]
                 .cpu()
                 .numpy()
@@ -80,7 +80,8 @@ def evaluate_model(model, metadata, batch_size=8192):
                 "reference_role", "scientific_reference"
             ),
             ("zeta_definition"): (
-                "sea-level elevation relative to the undisturbed surface; total depth is d + zeta"
+                "sea-level elevation relative to the undisturbed surface; "
+                "total depth is d + zeta"
             ),
             ("residual_definition"): (
                 "signed PDE residual, not squared loss; model coordinate"
@@ -89,17 +90,17 @@ def evaluate_model(model, metadata, batch_size=8192):
         },
     )
     for key, predicted, reference, grid, units in (
-            ("u", u, u_ref, "x_u", "m s-1"),
-            ("zeta", zeta, zeta_ref, "x_zeta", "m"),
+        ("u", u, u_ref, "x_u", "m s-1"),
+        ("zeta", zeta, zeta_ref, "x_zeta", "m"),
     ):
         for suffix, values, title in (
-                ("pred", predicted, "PINN prediction"),
-                ("ref", reference, "numerical reference"),
-                (
-                        "error",
-                        predicted - reference,
-                        "signed prediction minus reference",
-                ),
+            ("pred", predicted, "PINN prediction"),
+            ("ref", reference, "numerical reference"),
+            (
+                "error",
+                predicted - reference,
+                "signed prediction minus reference",
+            ),
         ):
             ds[f"{key}_{suffix}"] = (
                 (grid, "time"),
@@ -111,26 +112,30 @@ def evaluate_model(model, metadata, batch_size=8192):
     try:
         for start in range(0, len(model.time_input_grid), batch_size):
             t = (
-                model.time_input_grid[start: start + batch_size]
+                model.time_input_grid[start : start + batch_size]
                 .detach()
                 .clone()
                 .requires_grad_(True)
             )
             x = (
-                model.x_input_grid[start: start + batch_size]
+                model.x_input_grid[start : start + batch_size]
                 .detach()
                 .clone()
                 .requires_grad_(True)
             )
             model.pde_points = torch.hstack((t, x))
             model.compute_pde_residuals()
-            momentum_chunks.append(model.momentum_residual.detach().cpu().numpy())
-            continuity_chunks.append(model.continuity_residual.detach().cpu().numpy())
+            momentum_chunks.append(
+                model.momentum_residual.detach().cpu().numpy()
+            )
+            continuity_chunks.append(
+                model.continuity_residual.detach().cpu().numpy()
+            )
     finally:
         model.pde_points = old_points
     for key, values, units in (
-            ("momentum_residual", momentum_chunks, "m s-2"),
-            ("continuity_residual", continuity_chunks, "m s-1"),
+        ("momentum_residual", momentum_chunks, "m s-2"),
+        ("continuity_residual", continuity_chunks, "m s-1"),
     ):
         ds[key] = (
             ("diagnostic_x", "diagnostic_time"),
@@ -144,8 +149,8 @@ def evaluate_model(model, metadata, batch_size=8192):
         model.time_grid, dtype=torch.float32, device=model.device
     ).reshape(-1, 1)
     for key, bound in (
-            ("u_bc_left", model.x_min),
-            ("u_bc_right", model.x_max),
+        ("u_bc_left", model.x_min),
+        ("u_bc_right", model.x_max),
     ):
         ds[key] = (
             "diagnostic_time",
@@ -176,8 +181,8 @@ def evaluate_model(model, metadata, batch_size=8192):
         {"units": "m"},
     )
     for key, column, factor, units in (
-            ("u", 0, length / time, "m s-1"),
-            ("zeta", 1, height, "m"),
+        ("u", 0, length / time, "m s-1"),
+        ("zeta", 1, height, "m"),
     ):
         ds[f"ic_{key}_pred"] = (
             "ic_sample",
@@ -191,11 +196,14 @@ def evaluate_model(model, metadata, batch_size=8192):
             {"units": units},
         )
     metrics = {}
-    for name, prediction, reference in (("u", u, u_ref), ("zeta", zeta, zeta_ref)):
+    for name, prediction, reference in (
+        ("u", u, u_ref),
+        ("zeta", zeta, zeta_ref),
+    ):
         error = prediction.astype(np.float64) - reference
         denominator = np.linalg.norm(reference.astype(np.float64))
         max_ref = np.max(np.abs(reference))
-        metrics[f"mse_{name}"] = float(np.mean(error ** 2))
+        metrics[f"mse_{name}"] = float(np.mean(error**2))
         metrics[f"relative_l2_{name}"] = (
             float(np.linalg.norm(error) / denominator) if denominator else None
         )

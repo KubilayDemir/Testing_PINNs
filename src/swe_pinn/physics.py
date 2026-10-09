@@ -33,13 +33,15 @@ def swe_residuals(model, t, x):
         if model.nondimensionalize
         else model.gravitational_acceleration
     )
-    drag_scale = model.horizontal_length_scale if model.nondimensionalize else 1
+    drag_scale = (
+        model.horizontal_length_scale if model.nondimensionalize else 1
+    )
     momentum = (
-            u_t
-            + float(model.momentum_advection) * u * u_x
-            + pressure * zeta_x
-            + drag_scale * model.nonlinear_drag_coefficient * u * torch.abs(u)
-            - model.momentum_dissipation * u_xx
+        u_t
+        + float(model.momentum_advection) * u * u_x
+        + pressure * zeta_x
+        + drag_scale * model.nonlinear_drag_coefficient * u * torch.abs(u)
+        - model.momentum_dissipation * u_xx
     )
     continuity = zeta_t + u_x * (zeta + model.average_sea_level) + u * zeta_x
     return momentum, continuity

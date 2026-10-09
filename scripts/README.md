@@ -2,11 +2,14 @@
 
 Run these from the repository root:
 
-| Script | Purpose |
-|---|---|
-| `setup_fortran.ps1` | Install a local Windows Fortran compiler under ignored `.tools/` |
-| `check_environment.py` | Check package imports, array/autograd support, NetCDF output and optional CUDA/notebook support |
-| `check_gpu_memory.py` | Measure one proposed SWE update and batched diagnostics on an allocated GPU |
-| `convert_fortran_output.py` | Convert supplied solver text snapshots into NumPy arrays for `import-reference` |
+- `setup_fortran.ps1`: Install a local Windows Fortran compiler under ignored
+  `.tools/`
+- `check_environment.py`: Check package imports, array/autograd support, NetCDF
+  output and optional CUDA/notebook support
+- `check_gpu_memory.py`: Measure one proposed SWE update and batched
+  diagnostics on an allocated GPU
+- `convert_fortran_output.py`: Convert supplied solver text snapshots into
+  NumPy arrays for `import-reference`
 
-The reference-generation workflow is documented under `reference_solutions/shallow_water/`.
+The reference-generation workflow is documented under
+`reference_solutions/shallow_water/`.

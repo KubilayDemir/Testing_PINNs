@@ -12,7 +12,8 @@ import torch
 import xarray as xr
 
 from .output_storage import (
-    save_reproduction_bundle, source_manifest,
+    save_reproduction_bundle,
+    source_manifest,
     history_dataset,
     provenance,
     save_config,
@@ -48,7 +49,7 @@ def check_reference(config, path):
     t0, t1 = config["domain"]["time"]
     x0, x1 = config["domain"]["space"]
     if not np.isclose(reference.x_u[0], x0) or not np.isclose(
-            reference.x_u[-1], x1
+        reference.x_u[-1], x1
     ):
         raise ValueError(
             "Reference velocity grid must span the configured spatial domain"
@@ -58,8 +59,8 @@ def check_reference(config, path):
             "Elevation grid must lie inside velocity boundary nodes"
         )
     if (
-            reference.time[0] > t0
-            or reference.time[-1] + np.max(np.diff(reference.time)) < t1
+        reference.time[0] > t0
+        or reference.time[-1] + np.max(np.diff(reference.time)) < t1
     ):
         raise ValueError(
             (
@@ -71,7 +72,7 @@ def check_reference(config, path):
 
 
 def create_model(
-        config, reference_path, segment_id=0, previous=None, checkpoint_dir=None
+    config, reference_path, segment_id=0, previous=None, checkpoint_dir=None
 ):
     kwargs = model_kwargs(
         config, reference_path, segment_id, previous, checkpoint_dir
@@ -101,8 +102,8 @@ def train(config, root, run_id=None, resume_run=None):
         )
     check_reference(config, reference_path)
     if (
-            str(config["device"]).startswith("cuda")
-            and not torch.cuda.is_available()
+        str(config["device"]).startswith("cuda")
+        and not torch.cuda.is_available()
     ):
         raise RuntimeError(
             "CUDA requested but unavailable; set device: cpu in YAML"
@@ -110,27 +111,33 @@ def train(config, root, run_id=None, resume_run=None):
     seed_everything(config["seed"])
     torch.set_num_threads(config["cpu_threads"])
     run_id = (
-            run_id
-            or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-            + "-"
-            + uuid.uuid4().hex[:8]
+        run_id
+        or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        + "-"
+        + uuid.uuid4().hex[:8]
     )
     if Path(run_id).name != run_id or run_id in (".", ".."):
         raise ValueError("run-id must be a single directory name")
     run = (
-            resolve_path(root, config["output_root"])
-            / config["experiment"]
-            / run_id
+        resolve_path(root, config["output_root"])
+        / config["experiment"]
+        / run_id
     )
     if resume_run is not None:
         run = Path(resume_run).resolve()
         if json.loads((run / "config.json").read_text()) != config:
-            raise ValueError("Resume requires the original unchanged configuration")
+            raise ValueError(
+                "Resume requires the original unchanged configuration"
+            )
         metadata = json.loads((run / "metadata.json").read_text())
         if metadata["reference_sha256"] != sha256(reference_path):
             raise ValueError("Reference changed since the original run")
-        if json.loads((run / "source_manifest.json").read_text()) != source_manifest(root):
-            raise ValueError("Source changed since the original run; use the saved source.zip")
+        if json.loads(
+            (run / "source_manifest.json").read_text()
+        ) != source_manifest(root):
+            raise ValueError(
+                "Source changed since the original run; use the saved source.zip"
+            )
         if not config["training"]["resume_period"]:
             raise ValueError("This run did not enable training.resume_period")
     else:
@@ -139,10 +146,13 @@ def train(config, root, run_id=None, resume_run=None):
         metadata = provenance(root, reference_path, config)
         metadata["source_sha256"] = save_reproduction_bundle(run, root)
         with xr.open_dataset(reference_path) as ds:
-            metadata["reference_role"] = ds.attrs.get("data_role", "scientific_reference")
+            metadata["reference_role"] = ds.attrs.get(
+                "data_role", "scientific_reference"
+            )
         write_json(run / "metadata.json", metadata)
     previous = None
     from .training_checkpoints import HistoryWriter, save_torch, trim_streams
+
     try:
         for segment_id in range(config["domain"]["n_time_segments"]):
             segment = run / "segments" / f"{segment_id:03d}"
@@ -154,12 +164,19 @@ def train(config, root, run_id=None, resume_run=None):
                 config, reference_path, segment_id, previous, checkpoints
             )
             recovery = checkpoints / "resume.pt"
-            recovery = recovery if resume_run is not None and recovery.exists() else None
+            recovery = (
+                recovery
+                if resume_run is not None and recovery.exists()
+                else None
+            )
             if config["output"]["stream_history"]:
                 if resume_run is not None:
                     trim_streams(segment, recovery)
                 model.history_writer = HistoryWriter(segment, metadata)
-            write_json(run / "status.json", {"status": "running", "segment": segment_id})
+            write_json(
+                run / "status.json",
+                {"status": "running", "segment": segment_id},
+            )
             model.fit(resume=recovery)
             elapsed = time.perf_counter() - started
             # Save the final iterate before loading the selected best checkpoint.
@@ -235,7 +252,7 @@ def train(config, root, run_id=None, resume_run=None):
 
 
 def evaluate_checkpoint(
-        config, root, checkpoint, output, segment_id=0, handoff=None
+    config, root, checkpoint, output, segment_id=0, handoff=None
 ):
     """Evaluate any compatible state dict, including archived extensionless backups."""
     reference_path = resolve_path(root, config["reference"])

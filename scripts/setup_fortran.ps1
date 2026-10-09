@@ -9,12 +9,15 @@ if (Test-Path -LiteralPath $compiler) {
 }
 $archive = Join-Path $repoRoot '.tools/compiler.zip'
 New-Item -ItemType Directory -Force $compilerDirectory | Out-Null
-$url = 'https://github.com/brechtsanders/winlibs_mingw/releases/download/16.2.0posix-14.0.0-ucrt-r1/winlibs-x86_64-posix-seh-gcc-16.2.0-mingw-w64ucrt-14.0.0-r1.zip'
+$url = 'https://github.com/brechtsanders/winlibs_mingw/releases/download/' +
+    '16.2.0posix-14.0.0-ucrt-r1/' +
+    'winlibs-x86_64-posix-seh-gcc-16.2.0-mingw-w64ucrt-14.0.0-r1.zip'
 if (!(Test-Path -LiteralPath $archive)) {
     Invoke-WebRequest -Uri $url -OutFile $archive
 }
 $expected = 'c1f52294597c0b73786b2a78eb5d176d89226d2f21875eab75e783a8b1cefcc4'
-if ((Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash.ToLowerInvariant() -ne $expected) {
+$actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash
+if ($actual.ToLowerInvariant() -ne $expected) {
     throw 'Compiler download checksum mismatch.'
 }
 tar.exe -xf $archive -C $compilerDirectory
