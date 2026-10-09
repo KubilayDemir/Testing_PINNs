@@ -1,6 +1,30 @@
-# created by virtualenv automatically
+# Generated data and environments. Paper checkpoints remain tracked.
 *.pdf
 *.tiff
 *.npy
-venv/*
+*.py[cod]
+__pycache__/
+.venv/
+.tools/
+venv/
 .idea/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+runs/
+numerical_reference/swe/solutions/*
+!numerical_reference/swe/solutions/.gitkeep
+
+
+numerical_reference/swe/work/
+numerical_reference/swe/convergence_results/
+slurm/logs/
+slurm/generated/
+
+tests/fixtures/*.nc
+.DS_Store
+._*
+
+!numerical_reference/swe/solutions/viscous.nc
+!numerical_reference/swe/solutions/inviscid.nc

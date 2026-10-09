@@ -1,23 +1,10 @@
-name: plankton
+name: swe-pinn-reflections
 channels:
-  - pytorch
   - conda-forge
 dependencies:
-  - python
-  - jupyterlab
-  - ipython
-  - ipywidgets
-  - numpy
-  - pytorch
-  - cudatoolkit
-  - pytorch-lightning
-  - torchvision
-  - scikit-learn
-  - pillow
-  - tqdm
-  - matplotlib
+  - python>=3.10
   - pip
   - pip:
-      - test-tube
-      - fairscale
-      - torchvision
+      - -e .[test]
+# Install a CUDA-compatible PyTorch build separately if needed.
+# The exact tested environment is recorded in requirements-tested.txt.

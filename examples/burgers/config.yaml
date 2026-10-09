@@ -1,0 +1,10 @@
+# Architecture for the archived Burgers weights; training history was not supplied.
+equation: burgers
+experiment: archived_burgers
+physics:
+  diffusivity: 0.0031830987732601136
+network:
+  hidden_layers: [20, 20, 20, 20, 20, 20, 20, 20, 20]
+  activation: tanh
+  enforce_bc: false
+  enforce_ic: false

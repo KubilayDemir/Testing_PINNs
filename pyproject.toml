@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swe-pinn-reflections"
+version = "0.1.0"
+description = "Reproducible shallow-water PINN training, evaluation, and diagnostics"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24,<3", "torch>=2.2,<3", "matplotlib>=3.7,<4",
+    "PyYAML>=6,<7", "xarray>=2024.1", "netCDF4>=1.6,<2", "smt>=2.15,<3", "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+
+[project.scripts]
+pinn = "swe_pinn.cli:main"
+swe-pinn = "swe_pinn.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+swe_pinn = ["defaults.yaml", "optim/*LICENSE", "benchmarks/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-m 'not scientific'"
+markers = ["scientific: optional prescribed-field demonstrations"]
+
+[tool.black]
+line-length = 79

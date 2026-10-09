@@ -1,0 +1,24 @@
+# Software check only: requires `swe-pinn make-fixture` first.
+# Uses synthetic arrays; this configuration does not reproduce study results.
+experiment: smoke
+seed: 0
+device: cpu
+reference: tests/fixtures/synthetic.nc
+domain:
+  time: [0.0, 600.0]
+network:
+  hidden_layers: [8, 8]
+sampling:
+  n_pde: 16
+  n_bc: 8
+  n_ic: 8
+training:
+  epochs: 2
+  pde_batch_size: 8
+  bc_batch_size: 4
+  ic_batch_size: 4
+output:
+  snapshot_period: 1
+  stream_history: false
+  batch_diagnostics: false
+  keep_improving_checkpoints: true

@@ -1,0 +1,82 @@
+schema_version: 1
+equation: swe
+experiment: swe_viscous
+seed: 0
+device: cpu
+cpu_threads: 1
+reference: numerical_reference/swe/solutions/viscous.nc
+output_root: runs
+physics:
+  gravity: 9.81
+  mean_depth: 100.0
+  viscosity: 50000.0
+  drag: 0.0
+  amplitude: 1.0
+  momentum_advection: true
+scales:
+  nondimensionalize: true
+  length: 1000000.0
+  time: 86400.0
+  vertical_factor: 1.0
+domain:
+  time:
+  - 0.0
+  - 270000.0
+  space:
+  - -1000000.0
+  - 1000000.0
+  n_time_segments: 1
+network:
+  hidden_layers:
+  - 100
+  - 100
+  - 100
+  - 100
+  activation: tanh
+  split_networks: false
+  mixed_activations: false
+  siren_init: false
+  enforce_bc: false
+  enforce_ic: false
+  ic_transition: TF2
+  activation_checkpointing: false
+loss:
+  use_pde: true
+  use_bc: true
+  use_ic: true
+  use_reference: false
+  weight_pde: 1.0
+  weight_bc: 1.0
+  weight_ic: 1.0
+sampling:
+  n_pde: 100000
+  n_bc: 40000
+  n_ic: 40000
+  resample_period: 10000000
+training:
+  epochs: 10000
+  minibatch: true
+  pde_batch_size: 500
+  bc_batch_size: 200
+  ic_batch_size: 200
+  iterations_per_epoch: null
+  optimizer: Adam
+  learning_rate: 0.0005
+  line_search: null
+  use_pcgrad: true
+  adaptive_loss_weights: false
+  report_period: 1
+  dataloader_workers: 0
+  pin_memory: false
+  resume_period: 100
+  reference_on_cpu: true
+output:
+  save_predictions: true
+  save_residuals: true
+  snapshot_period: 100
+  plots: true
+  evaluation_batch_size: 8192
+  stream_history: true
+  batch_diagnostics: true
+  keep_improving_checkpoints: false
+  checkpoint_period: 0

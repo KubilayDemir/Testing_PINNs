@@ -1,0 +1,10 @@
+# Architecture for the archived heat weights; training history was not supplied.
+equation: heat
+experiment: archived_heat
+physics:
+  diffusivity: 0.25
+network:
+  hidden_layers: [50, 50, 50, 50, 50, 50, 50, 50]
+  activation: tanh
+  enforce_bc: false
+  enforce_ic: false
