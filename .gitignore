@@ -12,8 +12,6 @@ venv/
 *.egg-info/
 build/
 dist/
-training_results/
-!training_results/
 training_results/*
 !training_results/README.md
 reference_solutions/shallow_water/solutions/*
@@ -24,6 +22,7 @@ reference_solutions/shallow_water/work/
 reference_solutions/shallow_water/convergence_results/
 cluster_jobs/logs/
 cluster_jobs/generated/
+cluster_jobs/environment.sh
 
 software_tests/synthetic_data/*.nc
 .DS_Store
