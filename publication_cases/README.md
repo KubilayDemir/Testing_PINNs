@@ -32,6 +32,9 @@ python -m swe_pinn evaluate \
   --device cpu
 ```
 
-Published data and figure notebooks are on
-[Zenodo](https://zenodo.org/records/23168993). New-run figures use `python -m
+The [Zenodo dataset](https://zenodo.org/records/23168993) provides
+`pinn_closed_boundary_swe_mathematics2024_data_code.zip`, with processed NetCDF
+files in `datasets/` and `generate_publication_figures_and_tables.ipynb`.
+Extract the archive, open the notebook in the extracted folder, and run its
+imports cell before a figure or table section. New-run figures use `python -m
 swe_pinn plot --run-dir <run-directory>`.
