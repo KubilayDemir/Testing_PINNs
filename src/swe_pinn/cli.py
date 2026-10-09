@@ -4,7 +4,7 @@ import argparse
 from copy import deepcopy
 from pathlib import Path
 
-from .config import load_config
+from .config import load_config, default_case_path
 
 
 def main(argv=None):
@@ -20,7 +20,7 @@ def main(argv=None):
     commands = parser.add_subparsers(dest="command", required=True)
     training = commands.add_parser("train")
     training.add_argument("--equation", choices=("swe", "heat", "burgers"), default="swe")
-    training.add_argument("--config", type=Path, help="default: cases/<equation>/config.yaml")
+    training.add_argument("--config", type=Path, help="default: selected equation's training_cases configuration")
     training.add_argument("--run-id")
     training.add_argument("--seed", type=int, help="override seed for independent repetitions")
     training.add_argument("--device", help="override device, e.g. cpu or cuda:0")
@@ -29,6 +29,9 @@ def main(argv=None):
     training.add_argument("--options", nargs="+", type=Path, help="optional YAML overrides, applied in order")
     resume = commands.add_parser("resume", help="recover a locally generated run at an epoch boundary")
     resume.add_argument("--run-dir", type=Path, required=True)
+    monitor = commands.add_parser("monitor", help="live loss plots in a browser; reads saved histories")
+    monitor.add_argument("--run-dir", type=Path, required=True)
+    monitor.add_argument("--port", type=int, default=8765)
     study = commands.add_parser("plot-study", help="paper-style panels for new run outputs")
     study.add_argument("--segment-dirs", nargs="+", type=Path, required=True)
     study.add_argument("--labels", nargs="+")
@@ -82,12 +85,12 @@ def main(argv=None):
     reference.add_argument(
         "--source", default="", help="solver settings, provenance, and/or DOI"
     )
-    fixture = commands.add_parser(
-        "make-fixture",
+    test_data = commands.add_parser(
+        "make-test-data",
         help="create SYNTHETIC software-test data, not a scientific reference",
     )
-    fixture.add_argument(
-        "--output", type=Path, default=Path("tests/fixtures/synthetic.nc")
+    test_data.add_argument(
+        "--output", type=Path, default=Path("software_tests/synthetic_data/synthetic.nc")
     )
     args = parser.parse_args(argv)
     root = args.root.resolve()
@@ -97,13 +100,13 @@ def main(argv=None):
 
     if args.command == "train":
         import yaml
-        path = resolve(args.config or Path(f"cases/{args.equation}/config.yaml"))
+        path = resolve(args.config or default_case_path(args.equation))
         equation = (yaml.safe_load(path.read_text()) or {}).get("equation", args.equation)
         if equation == "swe":
             from .training import train
             loader = load_config
         else:
-            from .benchmarks.training import train, load_config as loader
+            from .heat_and_burgers.training import train, load_config as loader
         config = loader(path, [resolve(path) for path in args.options or []])
         if args.seed is not None:
             config["seed"] = args.seed
@@ -116,6 +119,9 @@ def main(argv=None):
                 parser.error("--initial-checkpoint currently applies to heat and Burgers")
             config["training"]["initial_checkpoint"] = str(args.initial_checkpoint)
         print(train(config, root, args.run_id))
+    elif args.command == "monitor":
+        from .live_losses import serve_losses
+        serve_losses(resolve(args.run_dir), args.port)
     elif args.command == "resume":
         import json
         directory = resolve(args.run_dir)
@@ -123,11 +129,11 @@ def main(argv=None):
             from .training import train
             loader = load_config
         else:
-            from .benchmarks.training import train, load_config as loader
+            from .heat_and_burgers.training import train, load_config as loader
         print(train(loader(directory / "config.yaml"), root, resume_run=directory))
     elif args.command == "check-physics":
         import json
-        from .examples import check
+        from .equation_checks import check
         print(json.dumps(check(args.case), indent=2))
     elif args.command == "evaluate":
         from .training import evaluate_checkpoint
@@ -158,7 +164,7 @@ def main(argv=None):
                     if segment.is_dir():
                         print(plot_segment(segment))
             else:
-                from .benchmarks.training import plot
+                from .heat_and_burgers.training import plot
                 print(plot(directory))
     elif args.command == "plot-study":
         from .plotting import plot_study
@@ -197,9 +203,9 @@ def main(argv=None):
             )
         )
     else:
-        from .fixtures import make_fixture
+        from .synthetic_test_data import make_test_data
 
-        print(make_fixture(resolve(args.output)))
+        print(make_test_data(resolve(args.output)))
 
 
 if __name__ == "__main__":

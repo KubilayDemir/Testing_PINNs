@@ -20,8 +20,8 @@ from .conditions import (
     boundary_u_left,
     boundary_u_right,
 )
-from .optim.pcgrad import PCGrad
-from .optim.lbfgs import FullBatchLBFGS
+from .optimizers.pcgrad import PCGrad
+from .optimizers.lbfgs import FullBatchLBFGS
 from .reference import load_reference
 
 
@@ -930,7 +930,7 @@ class PINN(nn.Module):
         )
 
     def _save_best(self, epoch, score):
-        from .runtime import save_torch
+        from .training_checkpoints import save_torch
 
         if self.checkpoint_dir is not None:
             self.checkpoint_dir.mkdir(parents=True, exist_ok=True)

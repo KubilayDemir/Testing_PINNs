@@ -12,19 +12,22 @@ venv/
 *.egg-info/
 build/
 dist/
-runs/
-numerical_reference/swe/solutions/*
-!numerical_reference/swe/solutions/.gitkeep
+training_results/
+!training_results/
+training_results/*
+!training_results/README.md
+reference_solutions/shallow_water/solutions/*
+!reference_solutions/shallow_water/solutions/.gitkeep
 
 
-numerical_reference/swe/work/
-numerical_reference/swe/convergence_results/
-slurm/logs/
-slurm/generated/
+reference_solutions/shallow_water/work/
+reference_solutions/shallow_water/convergence_results/
+cluster_jobs/logs/
+cluster_jobs/generated/
 
-tests/fixtures/*.nc
+software_tests/synthetic_data/*.nc
 .DS_Store
 ._*
 
-!numerical_reference/swe/solutions/viscous.nc
-!numerical_reference/swe/solutions/inviscid.nc
+!reference_solutions/shallow_water/solutions/viscous.nc
+!reference_solutions/shallow_water/solutions/inviscid.nc

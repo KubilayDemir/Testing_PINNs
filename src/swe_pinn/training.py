@@ -11,7 +11,7 @@ import numpy as np
 import torch
 import xarray as xr
 
-from .artifacts import (
+from .output_storage import (
     save_reproduction_bundle, source_manifest,
     history_dataset,
     provenance,
@@ -96,7 +96,7 @@ def train(config, root, run_id=None, resume_run=None):
     if not reference_path.exists():
         raise FileNotFoundError(
             f"Numerical reference missing: {reference_path}. "
-            "Run python numerical_reference/swe/generate.py --case viscous "
+            "Run python reference_solutions/shallow_water/generate.py --case viscous "
             "(or --case inviscid), or set reference in your YAML."
         )
     check_reference(config, reference_path)
@@ -142,7 +142,7 @@ def train(config, root, run_id=None, resume_run=None):
             metadata["reference_role"] = ds.attrs.get("data_role", "scientific_reference")
         write_json(run / "metadata.json", metadata)
     previous = None
-    from .runtime import HistoryWriter, save_torch, trim_streams
+    from .training_checkpoints import HistoryWriter, save_torch, trim_streams
     try:
         for segment_id in range(config["domain"]["n_time_segments"]):
             segment = run / "segments" / f"{segment_id:03d}"

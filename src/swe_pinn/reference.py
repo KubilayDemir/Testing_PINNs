@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import xarray as xr
-from .schema import canonical_dataset
+from .output_formats import canonical_dataset
 
 
 @dataclass
@@ -159,7 +159,7 @@ def import_arrays(
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         raise FileExistsError(output)
-    from .artifacts import write_netcdf
+    from .output_storage import write_netcdf
 
     write_netcdf(ds, output)
     load_reference(output)

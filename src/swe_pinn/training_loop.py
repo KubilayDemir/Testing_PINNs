@@ -4,7 +4,7 @@ import time
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from .optim.lbfgs import FullBatchLBFGS
+from .optimizers.lbfgs import FullBatchLBFGS
 
 
 def fit(model, resume=None):
@@ -36,7 +36,7 @@ def fit(model, resume=None):
     model.history_epochs, model.snapshot_epochs = [], []
     model.weight_steps = []
     model.time_per_epoch, model.time_per_iteration = [], []
-    from .runtime import restore_resume, save_resume, save_torch
+    from .training_checkpoints import restore_resume, save_resume, save_torch
 
     completed = restore_resume(model, resume) if resume else 0
     if resume is None:

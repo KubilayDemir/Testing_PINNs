@@ -23,10 +23,10 @@ swe-pinn = "swe_pinn.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-swe_pinn = ["defaults.yaml", "optim/*LICENSE", "benchmarks/*.yaml"]
+swe_pinn = ["defaults.yaml", "optimizers/*LICENSE", "heat_and_burgers/*.yaml"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["software_tests"]
 pythonpath = ["src"]
 addopts = "-m 'not scientific'"
 markers = ["scientific: optional prescribed-field demonstrations"]

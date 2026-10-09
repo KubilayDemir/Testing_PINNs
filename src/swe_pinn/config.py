@@ -7,6 +7,12 @@ import math
 
 import yaml
 
+CASE_DIRECTORIES = {"swe": "shallow_water", "heat": "heat_diffusion", "burgers": "viscous_burgers"}
+
+
+def default_case_path(equation):
+    return Path("training_cases") / CASE_DIRECTORIES[equation] / "config.yaml"
+
 
 def _merge(base, overrides, prefix=""):
     if not isinstance(overrides, dict):
@@ -203,7 +209,7 @@ def model_kwargs(
 ):
     """Translate user settings to the inherited numerical implementation."""
     import torch
-    from .optim.lbfgs import FullBatchLBFGS
+    from .optimizers.lbfgs import FullBatchLBFGS
 
     c = deepcopy(config)
     p, s, d, n, loss, sample, train, out = (

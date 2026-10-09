@@ -14,7 +14,7 @@ from swe_pinn.training import seed_everything
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=Path("cases/swe/config.yaml"))
+    parser.add_argument("--config", type=Path, default=Path("training_cases/shallow_water/config.yaml"))
     parser.add_argument("--layers", type=int, default=5)
     parser.add_argument("--width", type=int, default=200)
     parser.add_argument("--device", default="cuda:0")

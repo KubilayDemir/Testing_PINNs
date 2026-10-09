@@ -1,0 +1,61 @@
+equation: burgers
+experiment: burgers
+seed: 0
+device: cpu
+cpu_threads: 1
+output_root: training_results
+reference: reference_solutions/viscous_burgers/viscous_burgers_reference_nu_0p01_over_pi.mat
+physics:
+  diffusivity: 0.0031830987732601136
+network:
+  hidden_layers:
+  - 20
+  - 20
+  - 20
+  - 20
+  - 20
+  - 20
+  - 20
+  - 20
+  - 20
+  activation: tanh
+  enforce_bc: false
+  enforce_ic: false
+  activation_checkpointing: false
+loss:
+  weight_pde: 1.0
+  weight_bc: 1.0
+  weight_ic: 1.0
+sampling:
+  n_pde: 10000
+  n_bc: 100
+  n_ic: 100
+  resample_period: 10
+training:
+  epochs: 10
+  optimizer: Adam
+  learning_rate: 0.0005
+  initial_checkpoint: null
+  lr_schedule: none
+  lr_step_size: 5000
+  lr_decay: 0.5
+  report_period: 50
+  minibatch: true
+  pde_batch_size: 500
+  bc_batch_size: 100
+  ic_batch_size: 100
+  iterations_per_epoch: null
+  use_pcgrad: false
+  adaptive_loss_weights: false
+  dataloader_workers: 0
+  pin_memory: false
+  resume_period: 100
+output:
+  save_predictions: true
+  save_residuals: false
+  snapshot_period: 100
+  evaluation_batch_size: 8192
+  stream_history: true
+  batch_diagnostics: true
+  keep_improving_checkpoints: false
+  plots: true

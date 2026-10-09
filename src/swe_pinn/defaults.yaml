@@ -4,8 +4,8 @@ experiment: baseline_viscous
 seed: 0
 device: cpu
 cpu_threads: 1
-reference: numerical_reference/swe/solutions/viscous.nc
-output_root: runs
+reference: reference_solutions/shallow_water/solutions/viscous.nc
+output_root: training_results
 physics:
   gravity: 9.81
   mean_depth: 100.0

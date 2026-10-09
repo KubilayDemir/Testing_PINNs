@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, Normalize
 import numpy as np
 import xarray as xr
-from .schema import canonical_dataset
+from .output_formats import canonical_dataset
 
 
 def _save(fig, directory, name):
