@@ -17,6 +17,18 @@ python -m swe_pinn train --equation heat
 python -m swe_pinn train --equation burgers
 ```
 
+Alternatively, create the supplied environment once, then activate it:
+
+```bash
+conda env create -f environment.yaml
+conda activate testing-pinns
+python scripts/check_environment.py --notebooks
+```
+
+It installs the training, plotting, test and notebook packages. Activation
+selects the environment; it does not install missing packages. See
+[environment setup](docs/environment.md) for pip, CUDA and Fortran instructions.
+
 The default SWE run uses the included viscous numerical reference.
 Append `--device cuda:0` to use a GPU.
 

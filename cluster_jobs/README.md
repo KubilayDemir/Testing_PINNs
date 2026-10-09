@@ -3,6 +3,8 @@
 Install the package in the cluster's CPU/CUDA environment. Copy
 `environment.example.sh` to `environment.sh` and set modules/activation paths.
 Load gfortran for reference generation.
+Run `python scripts/check_environment.py --gpu` inside a GPU allocation to
+verify the selected environment. See [environment setup](../docs/environment.md).
 
 ```bash
 python cluster_jobs/submit.py --cluster levante --account YOUR_ACCOUNT --env-file cluster_jobs/environment.sh

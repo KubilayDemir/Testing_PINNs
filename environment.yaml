@@ -1,10 +1,10 @@
-name: swe-pinn-reflections
+name: testing-pinns
 channels:
   - conda-forge
 dependencies:
-  - python>=3.10
+  - python=3.14
   - pip
   - pip:
-      - -e .[test]
+      - -e .[test,notebooks]
 # Install a CUDA-compatible PyTorch build separately if needed.
 # The exact tested environment is recorded in requirements-tested.txt.
