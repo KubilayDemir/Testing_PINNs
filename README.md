@@ -1,23 +1,14 @@
 # Testing PINNs
 
-This repository supports the study **Closed-Boundary Reflections of Shallow
-Water Waves as an Open Challenge for Physics-Informed Neural Networks** by
-Kubilay Timur Demir, Kai Logemann and David S. Greenberg, published in
-[*Mathematics* 2024, 12(21), 3315](https://doi.org/10.3390/math12213315).
+This repository supports the following study with code, configurations, trained
+models and numerical reference solutions:
 
-The study evaluates physics-informed neural networks (PINNs) for the
-one-dimensional shallow-water equations with closed boundaries and repeated
-wave reflections. It compares network architectures, optimization and training
-techniques against a carefully constructed numerical reference solution. The
-case remains challenging for PINNs despite its simplicity for classical
-numerical methods.
+Demir, K. T.; Logemann, K.; Greenberg, D. S. (2024). Closed-Boundary
+Reflections of Shallow Water Waves as an Open Challenge for Physics-Informed
+Neural Networks. *Mathematics*, **12**(21), 3315.
+[doi:10.3390/math12213315](https://doi.org/10.3390/math12213315).
 
-The repository provides training and evaluation code, publication
-configurations and trained model parameter states, numerical reference
-solutions and their generation code, and plotting tools for new outputs. A
-shared PINN class also supports optional heat-diffusion and viscous Burgers
-test cases. These two cases and optional training methods are for further
-testing and are separate from the published SWE study.
+Heat diffusion and viscous Burgers are additional test cases.
 
 ## Publication data and figures
 
