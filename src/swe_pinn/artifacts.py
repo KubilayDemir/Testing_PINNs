@@ -118,7 +118,7 @@ def source_files(root):
     """Explicit source allowlist includes untracked code, excludes data and secrets."""
     root = reproduction_root(root)
     paths = []
-    for directory in ("src/swe_pinn", "configs", "examples", "paper/configurations", "tests", "scripts", "docs", "slurm",
+    for directory in ("src/swe_pinn", "cases", "paper/configurations", "tests", "scripts", "docs", "slurm",
                       "numerical_reference/swe"):
         paths.extend(path for path in (root / directory).rglob("*")
                      if path.is_file() and path.suffix in (".py", ".yaml", ".json", ".md", ".sh", ".ps1", ".f90")

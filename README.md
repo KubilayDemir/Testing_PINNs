@@ -22,7 +22,7 @@ Append `--device cuda:0` to use a GPU.
 
 ## Configure
 
-Edit `configs/swe.yaml`, `configs/heat.yaml` or `configs/burgers.yaml`, or copy
+Edit `cases/swe/config.yaml`, `cases/heat/config.yaml` or `cases/burgers/config.yaml`, or copy
 one and pass `--config your_case.yaml`. Each file includes its model, physics,
 sampling, optimizer and output settings. Adam defaults to learning rate 0.0005.
 
@@ -34,9 +34,8 @@ Hard conditions use transition functions; time-decomposition handoffs are soft I
 
 | Directory | Purpose |
 |---|---|
-| `configs/` | Complete configurations for new runs |
+| [`cases/`](cases/README.md) | New-run configurations and optional benchmark weights |
 | [`paper/`](paper/README.md) | SWE paper configurations and trained models |
-| [`examples/`](examples/README.md) | Heat and Burgers benchmarks |
 | [`numerical_reference/`](numerical_reference/swe/README.md) | Numerical solutions and Fortran generator |
 | `src/swe_pinn/` | Shared PINN class, equation physics and training workflows |
 | `runs/` | New results, separated by case and run ID |
@@ -57,3 +56,7 @@ python -m pytest
 SWE outputs are under `segments/000/`, `001/`, etc.; benchmark outputs are
 at the run root. Spatial histories are streamed and diagnostics are batched.
 See [model settings](docs/model.md) for equations, scaling and memory controls.
+
+Local `.venv/`, `.tools/`, `__pycache__/` and `*.egg-info/` directories are
+generated environment/tooling files, ignored by Git. Editable installation
+creates `egg-info` package metadata; it is not a model or an experiment.

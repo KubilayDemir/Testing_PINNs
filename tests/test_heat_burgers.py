@@ -40,7 +40,7 @@ def test_benchmark_residual_for_polynomial_field(kind):
 @pytest.mark.parametrize("kind", ["heat", "burgers"])
 @pytest.mark.parametrize("optimizer,pcgrad,adaptive", [("LBFGS", False, False), ("Adam", True, True)])
 def test_small_benchmark_workflow(tmp_path, kind, optimizer, pcgrad, adaptive):
-    c = load_config(ROOT / f"configs/{kind}.yaml")
+    c = load_config(ROOT / f"cases/{kind}/config.yaml")
     c["device"] = "cpu"
     c["reference"] = str(ROOT / "numerical_reference/burgers/shock.mat")
     c["output_root"] = str(tmp_path)
@@ -64,7 +64,7 @@ def test_schedule_resume_and_sparse_reporting(tmp_path, monkeypatch):
     import json
     import swe_pinn.benchmarks.training as runner
 
-    c = load_config(ROOT / "configs/heat.yaml")
+    c = load_config(ROOT / "cases/heat/config.yaml")
     c["output_root"] = str(tmp_path)
     c["network"]["hidden_layers"] = [8, 8]
     c["sampling"].update(n_pde=12, n_bc=4, n_ic=4, resample_period=2)

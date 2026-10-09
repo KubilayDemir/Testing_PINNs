@@ -25,7 +25,7 @@ def build(args):
             commands.append(command)
         else:
             for seed in args.seeds:
-                command=["-m","swe_pinn","train","--equation",args.equation,"--config",args.config or f"configs/{args.equation}.yaml",
+                command=["-m","swe_pinn","train","--equation",args.equation,"--config",args.config or f"cases/{args.equation}/config.yaml",
                          "--device","cuda:0","--cpu-threads",str(args.cpus),"--seed",str(seed),
                          "--run-id",f"slurm-{{job_id}}-{{task_id}}-seed-{seed}"]
                 if args.options: command += ["--options",*args.options]

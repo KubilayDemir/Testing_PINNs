@@ -5,6 +5,11 @@ surface elevation `zeta` with a linear output layer. Heat and Burgers predict
 one field `u` and activate their output layer with the configured activation.
 Equation-specific physics and conditions retain these formulations.
 
+`train` loads the selected case configuration, constructs this class, and
+samples PDE, boundary and initial-condition points. SWE training handles its
+two fields and optional time segments; heat/Burgers share a one-field training
+workflow. Both use the same model class and optimizer utilities.
+
 | Equation | PDE residual | Initial and boundary conditions |
 |---|---|---|
 | SWE | momentum: `u_t + u*u_x + g*zeta_x - viscosity*u_xx + drag*u*abs(u)`; continuity: `zeta_t + (depth+zeta)*u_x + u*zeta_x` | zero velocity, Gaussian elevation; zero boundary velocities |
@@ -21,6 +26,8 @@ Heat and Burgers use `t in [0,1]`, `x in [-1,1]`; default diffusivities are
 an initial transition. SWE TF2 blends a decaying initial elevation; TF3 adds
 the initial elevation. Hard ICs apply to the first time segment; later
 segments use the preceding network's final output as a soft IC target.
+The switches select hard enforcement of the prescribed conditions; arbitrary
+boundary values or types are not configurable through these switches.
 
 `network.hidden_layers` sets network size, e.g. `[200,200,200,200,200]`.
 GPU memory depends mainly on batch size and derivative graphs. CPU reference

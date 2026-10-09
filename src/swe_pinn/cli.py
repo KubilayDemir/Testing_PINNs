@@ -20,7 +20,7 @@ def main(argv=None):
     commands = parser.add_subparsers(dest="command", required=True)
     training = commands.add_parser("train")
     training.add_argument("--equation", choices=("swe", "heat", "burgers"), default="swe")
-    training.add_argument("--config", type=Path, help="default: configs/<equation>.yaml")
+    training.add_argument("--config", type=Path, help="default: cases/<equation>/config.yaml")
     training.add_argument("--run-id")
     training.add_argument("--seed", type=int, help="override seed for independent repetitions")
     training.add_argument("--device", help="override device, e.g. cpu or cuda:0")
@@ -97,7 +97,7 @@ def main(argv=None):
 
     if args.command == "train":
         import yaml
-        path = resolve(args.config or Path(f"configs/{args.equation}.yaml"))
+        path = resolve(args.config or Path(f"cases/{args.equation}/config.yaml"))
         equation = (yaml.safe_load(path.read_text()) or {}).get("equation", args.equation)
         if equation == "swe":
             from .training import train
