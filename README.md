@@ -13,6 +13,16 @@ The heat diffusion equation and the viscous Burgers equation are provided as
 additional test cases for checking the implementation. These cases are not
 part of the shallow water study.
 
+## Authors and affiliation
+
+- Kubilay Timur Demir — [![ORCID iD](https://info.orcid.org/wp-content/uploads/2020/12/ORCIDiD_icon16x16.png) 0009-0000-0847-8146](https://orcid.org/0009-0000-0847-8146)
+- Kai Logemann — [![ORCID iD](https://info.orcid.org/wp-content/uploads/2020/12/ORCIDiD_icon16x16.png) 0000-0002-7341-0073](https://orcid.org/0000-0002-7341-0073)
+- David S. Greenberg — [![ORCID iD](https://info.orcid.org/wp-content/uploads/2020/12/ORCIDiD_icon16x16.png) 0000-0002-8515-0459](https://orcid.org/0000-0002-8515-0459)
+
+All three authors are affiliated with
+[Helmholtz-Zentrum Hereon](https://www.hereon.de/), as listed in the accompanying
+Zenodo record.
+
 ## Publication data and figures
 
 The data and notebook used to generate the publication figures and tables are
