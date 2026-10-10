@@ -16,9 +16,9 @@ part of the shallow water study.
 ## Publication data and figures
 
 The data and notebook used to generate the publication figures and tables are
-available in the accompanying [Zenodo dataset](https://zenodo.org/records/23168993),
-with digital object identifier
-[10.5281/zenodo.23168993](https://doi.org/10.5281/zenodo.23168993).
+available on Zenodo:
+[doi:10.5281/zenodo.23168993](https://doi.org/10.5281/zenodo.23168993).
+
 The archive `pinn_closed_boundary_swe_mathematics2024_data_code.zip` contains:
 
 - `datasets/`: Processed datasets in Network Common Data Form (NetCDF),
